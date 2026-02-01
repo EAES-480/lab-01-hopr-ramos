@@ -1,0 +1,3993 @@
+---
+title: "Completed Exercises from Hands-On Programming with R"
+author: "Gavin McNicol"
+date: "1/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+$~$
+
+## Introduction
+
+### Acknowledgement
+
+These are the completed exercises for the 10 chapters of *Hands-On Programming with R* authored by Garrett Grolemund. The full text is freely available at <https://rstudio-education.github.io/hopr>.
+
+### Purpose
+
+Although the online version of the textbook includes most of the solutions, they are embedded within all the other material. I therefore created this set of completed exercises  to:
+
+ - **provide a concise template of completed solutions for the coding exercises**
+ 
+But also, to:
+
+ - **practice using pulling and pushing to Github repositories**
+ - **gain experience with RMarkdown syntax**
+
+### Getting Started with R
+
+Although I highly recommend the use of [RStudio Cloud](https://rstudio.cloud/), the textbook *Hands-On Programming with R* also features a handy [Appendix](https://rstudio-education.github.io/hopr/starting.html) to guide you through setting up R and RStudio IDE (Integrated Development Environment) on your local computer. 
+
+$~$
+
+## Chapter 1: The Very Basics
+
+In this chapter we will cover:
+
+ - Objects
+ - Functions
+ - Sampling with and without replacement
+ - Writing your own functions
+ - Function arguments
+ - Extracting a function in RStudio
+
+### Objects
+
+You can assign an object a name and a value as follows
+
+```{r}
+# use <- to assign the value of 1 to the object 'a'
+a <- 1
+# then test it
+a + 2
+# the output of the expression evaluated (a + 2) is displayed in the box above
+# note the use of the pound sign (#) at the start of a line lets me annotate the code
+```
+
+```{r}
+# create an object, die, that is a sequence of numbers from 1 to 6, using ':'
+die <- 1:6
+die
+```
+
+R also understands capitalization in object names:
+
+```{r}
+Name <- 1
+name <- 0
+
+name + 1
+```
+
+R overwrites previous information without asking permission:
+
+```{r}
+my_number <- 1
+my_number
+
+my_number <- 999
+my_number
+```
+
+Look at all the objects you have created using `ls()`:
+```{r}
+ls()
+```
+
+You can clear all your work space objects using (remove the # first)
+
+```{r}
+# rm(list=ls())
+```
+
+
+You can do all sorts of math with die (a sequence of numeric integers)
+
+```{r}
+die - 1
+die / 2
+die * die
+```
+
+When you multiply two vectors of unequal length, R will repeat the shorter vector to match the long vector (known as 'vector recycling')
+
+```{r}
+die + 1:2
+```
+
+
+But it will produce an error when the longer objeect is not a multiple of the shorter object
+
+```{r}
+die + 1:4
+```
+
+You can also do matrix multiplication
+
+```{r}
+die %*% die # inner
+die %o% die # outer
+```
+
+### Functions
+
+To use a function, just write the name of the function and then the data you want to operate on in the parentheses:
+
+```{r}
+round(3.1415)
+factorial(3)
+```
+
+The data you pass the function is called the function's **argument**. The argument can be:
+
+```{r}
+mean(1:6) # raw data
+mean(die) # an R object
+round(mean(die)) # of even the result of another function
+```
+
+You can "roll" the dice using the sample function, with arguments `x` (vector/data) and `size` (number of elements to sample):
+
+```{r}
+sample(x = 1:6, size = 2)
+```
+
+Roll your die by setting x to `die` and sample 1 number from it:
+
+```{r}
+sample(x = die, size = 1)
+
+```
+
+Roll it again:
+
+```{r}
+sample(x = die, size = 1)
+```
+
+R doesn't require arguments to be named, for example:
+
+```{r}
+sample(die, 1)
+```
+
+And if you use the wrong argument names, you will get an error:
+
+```{r}
+# round(3.1415, corners = 2) # running this without the # sign will cause an error
+# this is because the function round() does not use the argument 'corners'
+```
+
+You can look up the function's arguments with `args`:
+
+```{r}
+args(round) 
+# the output shows that the digits argument has a default value of zero, which rounds to the nearest integer
+```
+
+You can change the default value by assigning a new value to the digits argument:
+
+```{r}
+round(3.1415, digits = 2)
+```
+
+If you do not write argument names (which is recommended for any arguments after the first 2) then R matches values using the order:
+
+```{r}
+sample(die, 1) # here, R automatically matches the value 1 to the argument 'size'
+```
+
+If you name all your arguments, R doesn't care if you enter them in the non-standard order:
+
+```{r}
+sample(size = 1, x = die) 
+```
+
+### Sample with replacement
+
+By setting the argument size to 2, we can almost simulate the rolling of a pair of dice:
+
+```{r}
+sample(die, size = 2)
+```
+
+*Almost* like two dice, because if you repeat it many times, you will see that it never selects the same number twice:
+```{r}
+sample(die, size = 2) 
+sample(die, size = 2)  
+sample(die, size = 2)  
+```
+
+In other words, it samples *without* replacement.
+
+We need to sample *with* replacement, using the argument `replace = TRUE`:
+
+```{r}
+sample(die, size = 2, replace = TRUE) 
+```
+
+Sampling with replacement is an easy way to create independent random samples.
+
+**Congratulations, you can now simulate rolling a pair of dice!**
+
+You can also add up the result of your simulated dice throw if you save the output to the object `dice`, then use the function `sum()` on dice:
+
+```{r}
+dice <- sample(die, size = 2, replace = TRUE)
+dice
+sum(dice)
+```
+
+Confirm that calling dice won't rerun `sample(die, 2, replace = TRUE)`:
+
+```{r}
+dice
+dice # it gives the same result as originally output 
+```
+
+However, you *can* create an object that will re-roll the dice whenever you call it. In R, these are called **Functions**.
+
+### Writing your own functions
+
+We will write a function `roll()`, that will return the sum of rolling two dice:
+
+```{r}
+roll <- function() { # this line contains the function name (roll) and the parentheses contain the argument (here, there are none)
+  die <- 1:6
+  dice <- sample(die, size = 2, replace = TRUE)
+  sum(dice) # these three lines within the pair of braces contain the function's body of code. The indentations are only for clarity.
+}
+```
+
+R returns the last line of the body of code within the function, so make sure the final line of code returns a value:
+
+```{r}
+roll()
+```
+
+For instance, these lines of code as the final line will return a value:
+
+```{r}
+dice
+1 + 1
+sqrt(2)
+```
+
+But these lines will not:
+
+```{r}
+dice <- sample(die, size = 2, replace = TRUE)
+two <- 1 + 1
+a <- sqrt(2)
+```
+
+### Arguments
+
+What would happen if we changed our `roll()` function to this?
+
+```{r}
+# roll2 <- function() {
+#   dice <- sample(bones, size = 2, replace = TRUE)
+#   sum(dice)
+# }
+# 
+# roll2()
+```
+
+If you remove the # signs, it produces an error because the object `bones` cannot be found by the function.
+
+To supply `bones`, put the object name bones as an argument in the parentheses that follow the function:
+
+```{r}
+roll2 <- function(bones) {
+  dice <- sample(bones, size = 2, replace = TRUE)
+  sum(dice)
+}
+```
+
+Now `roll2()` will work as long as you provide a value or values for `bones` each time you call it:
+
+```{r}
+roll2(bones = 1:6)
+```
+
+Because there is only one argument, `bones`, we do not need to name it for R to match the values:
+
+```{r}
+roll2(1:6)
+```
+
+roll2() will still give an error if you do not supply `bones` at all. You can prevent this by assigning a default value when writing the function:
+
+```{r}
+roll2 <- function(bones = 1:6) {
+  dice <- sample(bones, size = 2, replace = TRUE)
+  sum(dice)
+}
+```
+
+```{r}
+roll2()
+```
+
+You can give your functions as many arguments as you like, just list their names, separated by a comma.
+
+### Extract Function in RStudio
+
+If you are working in the script window of RStudio you can create a function from lines of code using the drop-down menu option **Code > Extract Function**.
+
+Test it out with the three lines of code from the body of code in our `roll()` function:
+
+```{r}
+die <- 1:6
+dice <- sample(die, size = 2, replace = TRUE)
+sum(dice)
+```
+
+After you've done it, your code should update to look like this:
+
+```{r}
+roll <- function() {
+  die <- 1:6
+  dice <- sample(die, size = 2, replace = TRUE)
+  sum(dice)
+}
+```
+
+You should now have a familiarity with:
+
+ - Objects
+ - Functions
+ - Sampling with and without replacement
+ - Writing your own functions
+ - Function arguments
+ - Extracting a function in RStudio
+ 
+**Great work, you've finished Chapter 1!**
+
+$~$
+
+## Chapter 2: Packages and Help Pages
+
+In this chapter we will cover:
+
+ - Installing a package
+ - Loading a package from your library of packages
+ - Plotting using the function `qplot` from the `ggplot` package
+ - Using help pages
+
+### Packages
+
+Packages are collections of functions and objects made by professors, programmers, statisticians, and other R users.
+
+We will try using the `qplot` function which comes from the *ggplot2* package, a popular package for making graphs.
+
+First, install the package with the following function:
+
+```{r}
+# install.packages("ggplot2")
+```
+
+`qplot` won't work without loading it:
+
+```{r}
+# qplot
+# will give an error if you remove the # sign
+```
+
+To load an installed package use:
+
+```{r}
+library("ggplot2")
+```
+
+And look at `qplot`:
+
+```{r}
+qplot
+```
+
+`qplot` makes "quick plots". Let's test it out by defining some x and y values:
+
+```{r}
+x <- c(-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1)
+x
+```
+
+```{r}
+y <- c(x^3)
+y
+```
+
+```{r}
+qplot(x, y)
+```
+
+Notice how R matches the order of values in the vector `x` with the order of values in vector `y`? 
+
+This is known as *element-wise execution*.
+
+We can also make a histogram by just providing one vector of values:
+
+```{r}
+x <- c(1, 2, 2, 2, 3, 3)
+qplot(x, binwidth = 1)
+```
+
+The notation for describing this histogram intervals looks like: `[1, 2)`
+The hard bracket `[` means the first number is included in the interval.
+The parenthesis `)` means the last number is *not* included.
+
+For example, in the histogram above, there are three values in the interval `[2, 3)`.
+
+Let's try another example:
+
+```{r}
+x2 <- c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4)
+qplot(x2, binwidth = 1)
+```
+
+And another:
+
+```{r}
+x3 <- c(0, 1, 1, 2, 2, 2, 3, 3, 4)
+qplot(x3, binwidth = 1)
+```
+
+You can use a histogram to display visually how common different values of `x` are.
+
+Let's try visualizing many the *replicated* output of `roll()` (many dice rolls):
+
+```{r}
+replicate(3, 1 + 1)
+```
+
+```{r}
+rolls <- replicate(10, roll())
+qplot(rolls, binwidth = 1)
+```
+
+To get a better sense of the long term  pattern, let's replicate it 10,000 times:
+
+```{r}
+rolls <- replicate(10000, roll())
+qplot(rolls, binwidth = 1)
+```
+
+The histogram shows that the dice behaves predictably when replicated many times. The more likely values occur more frequently (e.g., 6, 7, and 8)
+
+
+### Help Pages
+
+Use a question mark `?` before a function name to open the help page:
+
+```{r}
+?sqrt
+?log10
+?sample
+```
+
+The help page has several sections:
+
+ - *Description*
+ - *Usage*
+ - *Arguments*
+ - *Details*
+ - *Value*
+ - *See Also*
+ - *Examples*
+ 
+You can also search by keyword if you forget a function name:"
+
+```{r}
+??log
+```
+
+Let's look at the `sample` help page:
+
+```{r}
+?sample
+```
+
+You'll have to copy and paste `?sample` into your RStudio console window, or run it from the script window.
+
+Notice `prob`:
+
+|   `A vector of probability weights for obtaining the elemtents of the vector being sampled.`
+
+And Details has more information:
+|   `The optional prob argument can be used to give a vector of weights for obtaining the elements of the vector being sampled. They need not sum to one, but they should be nonnegative and not all zero`
+
+Re-write the `roll` function to roll a pair of weighted dice:
+
+```{r}
+roll <- function() {
+  die <- 1:6
+  dice <- sample(die, size = 2, replace = T, 
+                 prob = c(rep(1/8, 5), 3/8))
+  sum(dice)
+}
+```
+
+Rerun the code chunk above, and then visualize the long term behavior of your dice:
+
+```{r}
+rolls <- replicate(10000, roll())
+qplot(rolls, binwidth = 1)
+```
+
+Notice that after changing the `prob` vector to make 6 more common, the distribution of dice roll outcomes is now skewed.
+
+You should now have a familiarity with:
+
+ - Installing a package
+ - Loading a package from your library of packages
+ - Plotting using the function `qplot` from the `ggplot` package
+ - Using help pages
+ 
+**Great job, you've finished Chapter 2!**
+
+$~$
+
+## Chapter 3: R Objects
+
+In this chapter we will cover:
+
+ 1. Objects
+     + Atomic Vectors
+     + Doubles
+     + Integers
+     + Characters
+     + Logicals
+     + Complex and Raw
+ 2. Attributes 
+     + Names
+     + Dim
+ 3. Matrices
+ 4. Arrays
+ 5. Class
+     + Dates and Times
+     + Factors
+ 6. Coercion
+ 7. Lists
+ 8. Data Frames
+ 9. Loading Data
+ 10. Saving Data
+
+### Objects
+#### Atomic Vectors
+
+Create an atomic vector by grouping values with c (concatenate)
+
+```{r}
+die <- c(1, 2, 3, 4, 5, 6)
+die
+is.vector(die)
+```
+
+Vectors can be of just one value
+
+```{r}
+five <- 5
+is.vector(five)
+```
+
+There are 6 types of atomic vectors in R:
+
+ 1. *Doubles* are the default for numbers and are the computer science term for numerics:
+
+```{r}
+typeof(die)
+```
+
+
+ 2. *Integers* store numbers without decimal points. Adding an L after a numeric value creates an integer:
+ 
+```{r}
+int <- c(-1L, 2L, 4L)
+int
+typeof(int)
+```
+
+By default, integer numbers saved without the L will be saved as double.
+
+Double values are accurate to about 16 significant digits. This rounding is normally negligible, but can create *floating-point errors* when rounding effects add up.
+
+ 3. *Character vectors* store small pieces of text:
+ 
+```{r}
+text <- c("Hello", "World")
+text
+typeof(text)
+```
+
+The individual elements of a character vector are known as strings. Can you tell the difference between a character string and a number?
+
+```{r}
+typeof(1)
+typeof("1")
+typeof("one")
+```
+
+Be careful, you can confuse R objects with strings, for example:
+
+```{r}
+x <- "x"
+x
+```
+
+ 4. *Logicals* are TRUE, FALSE, T, and F are R's version of logical (Boolean) data:
+ 
+```{r}
+logic <- c(TRUE, TRUE, FALSE)
+logic
+typeof(logic)
+typeof(T)
+```
+ 
+ 5. *Complex*. It is unlikely you will ever use these last two vector types but... for a complex vector, add an imaginary term to a number, with i:
+ 
+```{r}
+comp <- c(1 + 1i, 1 + 2i, 1 + 3i)
+comp
+typeof(comp)
+```
+ 
+ 6. *Raw* vectors store raw bytes of data. A simple empty raw vector of length n can be made with:
+ 
+```{r}
+raw(3)
+typeof(raw(3))
+```
+
+**Exercise**: What sort of vector will you use to store the face names of cards in a royal flush? ( i.e. "ace", "king", "queen", "jack", "ten )
+
+```{r}
+hand <- c("ace", "king", "queen", "jack", "ten")
+hand
+typeof(hand)
+```
+
+#### Attributes
+
+You can build a more sophisticated objects vector from an atomic vector by giving it *attributes* and assigning a *class*.
+
+An *attribute* is a piece of information you can attach to atomic vectors (or any R object). Normally, R will ignore this information, unless you ask to look for it
+
+```{r}
+attributes(die)
+```
+
+R uses NULL to represent an empty object.
+
+*Names*, *dimensions* (*dim*), and *classes* are the most common attributes.
+
+*Names*
+
+```{r}
+names(die)
+names(die) <- c("one", "two", "three", "four", "five", "six")
+names(die)
+attributes(die)
+```
+
+Now die has the names attribute.
+
+Names will be displayed above the object when you look at it:
+
+```{r}
+die
+```
+
+
+However they won't affect the values of the vector:
+
+```{r}
+die + 1
+names(die) <- c("uno", "dos", "tres", "cuatro", "cinco", "seis")
+die
+```
+
+To remove names, set it to NULL:
+
+```{r}
+names(die) <- NULL
+```
+
+*Dimensions*
+You can transform an atomic vector into an n-dimensional array with dim:
+
+```{r}
+dim(die)
+```
+
+Transform it into a (2 row x 3 column) array:
+
+```{r}
+dim(die) <- c(2, 3)
+die
+```
+
+Now into a (3 row x 2 column) array:
+
+```{r}
+dim(die) <- c(3, 2)
+die    
+```
+
+Now into a (1 row x 2 column x 3 slice) hypercube (a 3 dimensional structure):
+
+```{r}
+dim(die) <- c(1, 2, 3)
+die
+```
+
+Two notes on dim
+
+ * R will always use the first value of dim for the rows, and second for columns
+ * R will always fill the array by columns (all rows in column 1 first, and so on
+
+*Matrices* store two-dimensional arrays. A matrix will organize your vector of values into a matrix with the specified number of rows:
+
+```{r}
+m <- matrix(die, nrow = 2)
+m
+```
+
+To fill by row (rather than default by column):
+
+```{r}
+m <- matrix(die, nrow = 2, byrow = TRUE)
+m
+```
+
+More customization is possible, remember to check the help page with:
+
+```{r}
+?matrix
+```
+
+*Arrays* create an n-dimensional array, for example a hypercube in 4, 5, or n dimensions:
+
+```{r}
+ar <- array(c(11:14, 21:24, 31:34), dim = c(2, 2, 3))
+ar
+```
+
+**Exercise**: Create a 5 x 2 matrix for a royal flush of spades. (Remember the hand object created earlier)
+
+```{r}
+hand1 <- c(hand, "spades", "spades", "spades", "spades", "spades")
+
+matrix(hand1, nrow = 5)
+matrix(hand1 , ncol = 2)
+dim(hand1) <- c(5, 2)
+hand1
+```
+
+Notice that all three of these options for arranging the array dimensions work.
+
+#### Class
+Notice that changing `dim` doesn't change the type, but does change the class:
+
+```{r}
+dim(die) <- c(2, 3)
+typeof(die)
+class(die)
+```
+
+A class is a special case of an atomic vector. After using dim, die is now a matrix (class), a special case of a double atomic vector. The class attribute may not always appear if you run attributes:
+
+```{r}
+attributes(die)
+```
+
+Even if a class attribute is not assigned, R will return one based on the atomic vector type:
+
+```{r}
+class("Hello")
+class(5)
+```
+
+Setting an object's class attribute is normally a bad idea. Discussed more in Part 3 of the book!
+
+#### Dates and Times
+
+Attributes let R represent more types of data than just doubles, integers, characters, etc.
+R uses the "POSIXct" and "POSIXt" classes for dates and times:
+
+```{r}
+Sys.time() # a function to return the current time on your computer
+now <- Sys.time()
+now
+```
+
+It looks like  a character string, but it's data type is actually double:
+
+```{r}
+typeof(now)
+class(now)
+```
+
+In POSIXct, a widely used framework, any date and time is represented by the number of seconds before or after the standard date and time:
+
+E.g., 12:00 AM January 1st 1970 (in the Universal Time Coordinated (UTC) zone)
+
+Check using the unclasss function:
+
+```{r}
+unclass(now)
+```
+
+Check what day it was a million seconds after the standard date and time:
+
+```{r}
+mil <- 1000000
+mil
+```
+
+And look at the class:
+
+```{r}
+class(mil) <- c("POSIXct", "POSIXt")
+mil
+```
+
+This worked well, but in general forcing a class on an object is not a good idea. Classes are normally interpreted by R based upon the value type in the object.
+
+#### Factors
+Factors are how R stores categorical information, like eye color or ethnicity. To make a factor, pass an atomic vector to the factor function:
+
+```{r}
+gender <- factor(c("male", "female", "female", "male"))
+gender
+typeof(gender)
+```
+
+Notice that R stores the factor as type integer, this is because it assigns factors levels:
+
+```{r}
+attributes(gender)
+```
+
+You can see exactly how R is storing your factor with unclass:
+
+```{r}
+unclass(gender)
+```
+
+Factors can be confusing because they look like characters but behave like integers. 
+
+R will often try to convert character strings to factors when you load and create data but how to avoid this will be covered later.
+
+```{r}
+as.character(gender)
+```
+
+Congrats! You now understand all the possibilities of R's atomic vectors!
+
+#### Coercion
+
+Try creating an atomic vector with two value types:
+
+```{r}
+card <- c("ace", "hearts", 1)
+card
+```
+
+Notice the integer 1, is now a character string? R has *coerced* it into a character string because atomic vectors, and their special cases, matrices and arrays, can only store ONE type of data:
+
+**Coercion rules**:
+
+If a character string is present, R coerces everything to character strings:
+
+```{r}
+c(1, 2, 3, "4")
+```
+
+If logicals and numbers, R coerces everything to numbers (T = 1, F = 0):
+
+```{r}
+c(TRUE, 5, 5, FALSE)
+```
+
+If you try to do math with logical values, it will count the number of TRUEs:
+
+```{r}
+sum(c(TRUE, TRUE, FALSE, FALSE))
+```
+
+To explicitly convert between data types:
+
+```{r}
+as.character(1)
+as.logical(1)
+as.numeric(FALSE)
+```
+
+#### Lists
+
+To completely avoid coercion, you can use lists:
+
+```{r}
+list1 <- list(100:130, "R", list(TRUE, FALSE))
+list1
+```
+
+The double bracket index tells you which element of the list is displayed:
+
+```{r}
+list1[[2]]
+```
+
+The single bracket tells you which subselement of the list is displayed:
+
+```{r}
+list1[[1]][3]
+```
+
+This distinction is important because a list object can be anything, including another list:
+
+```{r}
+list1[[3]]
+
+# Is composed of...
+
+list1[[3]][[1]]
+list1[[3]][[2]]
+```
+
+Use a list to store a single playing card, such as the ace of hearts, worth one point:
+
+```{r}
+card <- list("ace", "hearts", 1)
+card
+```
+
+You could use lists to create a list, with 52 sublists, for all the differen cards but there is a faster way!
+
+#### Data Frames
+
+Data frames are the two-dimensional version of a list and by FAR the most useful storage structure for data analysis, and perfect for a deck of cards. (You can think of a data frame as the equivalent of an Excel spreadsheet)
+
+Give the data.frame() function any number of vectors, separated by a comma. Each vector should be set equal to a name that describes the vector:
+
+```{r}
+df <- data.frame(face = c("ace", "two", "six"),
+                 suit = c("clubs", "clubs", "clubs"),
+                 value = c(1, 2, 3))
+df
+```
+
+Note that df columns have to be of the same length. A data.frame is of special case of a list, of class "data frame":
+
+```{r}
+typeof(df)
+class(df)
+```
+
+The `str` function shows you which and how objects are grouped together:
+
+```{r}
+str(df)
+```
+
+Notice R saved the strings as factor, you can suppress this with:
+
+```{r}
+df <- data.frame(face = c("ace", "two", "six"),
+                 suit = c("clubs", "clubs", "clubs"),
+                 value = c(1, 2, 3), 
+                 stringsAsFactors = FALSE)
+str(df)
+```
+
+We could not type out all 52 card combinations, but it is easier to load data and safer for your data, and wrists.
+
+#### Loading Data
+
+Plain text files are the typical data storage type in R (and other data sci. applications).
+
+Go to http://bit.ly/deck_CSV to download the card deck file and take a look inside the .csv file.
+
+Go to the top-left window: Environment > Import Data > From Text File... > Select deck.csv > Open > Import.
+
+Look at the top and bottom of the data frame with:
+
+```{r}
+deck <- read.csv("deck.csv") # this line is required if you don't import through the menu buttons
+head(deck)
+tail(deck)
+```
+
+Bbefore continuing, let's save a new copy of the deck.csv. To find out where it saved it, check the working directory.
+
+```{r}
+wd <- getwd()
+setwd(wd)
+```
+
+```{r}
+write.csv(deck, file = "cards.csv", row.names = FALSE)
+```
+
+Notice, write.csv() needs three arguments: 
+
+ 1. The name of the object you wish to save
+ 2. The name you should give to the file you wish to save
+ 3. You should stop R from adding a column of numbers using `row.names = FALSE`
+
+Notes on loading data:
+
+ * R can open non-csv files, like Excel (xlsx) files directly
+ * But it's good practice to open data in the original program first
+ * Then export the data in a csv file type
+ * The exception of course being if you don't have the software (and its expensive!)
+
+You should now have a familiarity with:
+
+ - Objects
+ - Attributes
+ - Class
+ - Coercion
+ - Lists
+ - Data Frames
+ - Loading/Saving Data
+ 
+**Great job, you've finished Chapter 3!**
+
+$~$
+
+## Chapter 4: R Notation
+
+In this chapter we will cover:
+
+ 1. Selecting Values
+     + Positive Integers
+     + Negative Integers
+     + Zero
+     + Blank Spaces
+     + Logical Values
+     + Names
+ 2. Deal a Card
+ 3. Shuffle the Deck
+ 4. Dollar Signs and Double Brackets
+
+### Selecting Values
+
+To extract a value or set of values from a data frame use a pair of hard brackets:
+
+```{r}
+deck[,]
+```
+
+There are six ways to write an index in R, each is useful. 
+
+ - Positive integers
+ - Negative integers
+ - Zero
+ - Blank spaces
+ - Logical values
+ - Names
+
+*Positive Integers* work like *i,j* notation in algebra. 
+
+`Deck[i,j]` will return the ith row and the jth column:
+
+```{r}
+head(deck)
+deck[1, 1]
+```
+
+Extract more than one value using a vector of positive integers:
+
+```{r}
+deck[1, c(1, 2, 3)]
+deck[1, 1:3]
+```
+
+R doesn't remove these values, it gives you a new set which you can save to a new R object:
+
+```{r}
+new <- deck[1, 1:3]
+new
+```
+
+You can therefore repeat values more than once, by repeating an index:
+
+```{r}
+deck[c(1, 1), c(1, 2, 3)]
+
+```
+
+R's notation system works for any R object, as long as you supply one index for each dimension:
+
+```{r}
+vec <- c(6, 1, 3, 6, 10, 5)
+vec[1:3]
+```
+
+R's indexing begins at 1, as in algebra, and unlike zero for many other programming langauges. This means, given an index of 1, R returns the first element of an object.
+
+ - If you only select a single column, R will return a vector rather than the dataframe column
+ - If you would prefer the dataframe column is maintained, add drop = FALSE to the brackets
+ 
+```{r}
+deck[1:2, 1]
+deck[1:2, 1, drop = F]
+```
+ 
+*Negative integers* return every element *except* the elements of a negative index. For example:
+
+```{r}
+deck[-(2:52), 1:3]
+```
+
+Returns the first row, and excludes every other row. Negative integers are therefore more efficient for removing just a few rows or columns. You can mix positive and negative integers, but *only* in different indexes (row vs. column):
+
+```{r}
+deck[-1, 1, drop = F]
+```
+
+*Zero* returns nothing from a dimension when you use it as an index, creating an empty object:
+
+```{r}
+deck[0, 0]
+```
+
+It's not very helpful as an index!
+
+*Blank spaces* tell R to extract every value in a dimension (an entire row or column):
+
+```{r}
+deck[1, ]
+deck[, 2, drop = F]
+```
+
+*Logical Values*: T/TRUE values are returned if you provide a vector of same dimension as the object:
+
+```{r}
+deck[1, c(T, T, F)]
+rows <- c(T, rep(F, 51)) # rep calls the repeat function which takes a vector of values and # of repetitions as arguments
+deck[rows, ]
+```
+
+Using logicals may seem a little odd, but it can become a powerful tool!
+
+*Names* can be used to extract values based on their names in the object. Commonly used to extract particular named *columns*:
+
+```{r}
+deck[1, c("face", "suit", "value")]
+deck[ ,"value"]
+```
+
+
+**Exercise**: Deal a Card!
+
+Make a function that returns the first row of a data frame. Complete the basic function syntax:
+
+```{r}
+deal <- function(cards) {
+  # insert your function here
+}
+```
+
+Fill in the function:
+
+```{r}
+deal <- function(cards) {
+  cards[1, ]
+}
+```
+
+Try it out
+```{r}
+deal(deck)
+```
+
+Notice that it always deals the same (top) card:
+
+```{r}
+deal(deck)
+```
+
+This is a difficult problem to solve, so we will come back to it in Chapter 6.
+
+For now, you can just shuffle the deck after every deal. This is not a perfect solution because the card you dealt first is still present. To shuffle, you want to rearrange the order of the cards in your deck, each row in the data frame is a card so you want to randomly reorder the rows:
+
+Start by extracting every row in your data frame:
+
+```{r}
+deck2 <- deck[1:52, ]
+```
+
+The order is replicated exactly:
+
+```{r}
+head(deck2)
+```
+
+Alternatively, you can manually rearrange some of the rows:
+
+```{r}
+deck3 <- deck[c(2, 1, 3:52), ]
+```
+
+However, to randomized the order, you need to sort the integers (row numbers) into a random order. Then use the results as a row index. Use the `sample()` function for this:
+
+```{r}
+random <- sample(1:52, size = 52) # replace will be F by default
+random
+# creates a random index which you can use to subset from deck (below)
+deck4 <- deck[random, ]
+head(deck4)
+```
+
+Now the deck is truly shuffled! Combine with the deal function to create a shuffle function:
+
+```{r}
+shuffle <- function(cards){
+  random <- sample(1:52, size = 52)
+  cards[random, ]
+}
+```
+
+You can now shuffle the card deck between each deal:
+
+```{r}
+deal(deck) # returns the top card of the deck
+deck2 <- shuffle(deck) # randomly shuffles the deck and saves it as a new deck2 object
+deal(deck2) # returns the top card of deck2
+```
+
+#### Dollar Signs and Double Brackets
+
+You can also select a column from a data frame using the $:
+
+```{r}
+deck$value
+```
+
+Notice it will provide options to select from when you add $ to the data frame. This is very handy for computing means or other statistics:
+
+```{r}
+mean(deck$value)
+median(deck$value)
+```
+
+$ can also be used to subset lists in efficient ways. First, confirm that subsetting a list using a regular index returns a list:
+
+```{r}
+lst <- list(numbers = c(1, 2), logical = TRUE, strings = c("a", "b", "c"))
+lst
+lst[1]
+typeof(lst[1]) # notice the output is a list with one element
+```
+
+Most R functions do not work with lists: (remove # sign to run)
+
+```{r}
+#  sum(lst[1])
+```
+
+Use the $ notation instead to get the values with no list structure:
+
+```{r}
+lst$numbers
+sum(lst$numbers)
+```
+
+Alternatively, if you don't have or don't want names, for your list elements, then use double hard brackets to index:
+
+```{r}
+lst[[1]]
+lst[[2]]
+```
+
+Summary:
+
+ - if you subset a list with single-bracket notation, R will return a smaller list
+ - if you subset a list with double-bracket notation, R will return just the values inside that element of the list
+
+You can combine the single or double brackets with any indexing method:
+
+```{r}
+lst["numbers"]
+lst[["numbers"]]
+```
+
+You should now have a familiarity with:
+
+ 1. Selecting Values
+     + Positive Integers
+     + Negative Integers
+     + Zero
+     + Blank Spaces
+     + Logical Values
+     + Names
+ 2. Dollar Signs and Double Brackets
+ 
+ 3. And you know how to write a function to shuffle a card deck, and deal a card from a shuffled deck!
+
+**Congrats! You have completed Chapter 4!**
+
+$~$
+
+## Chapter 5: Modifying Values
+
+In this chapter we will cover:
+
+ 1. Changing Values in Place
+ 2. Logical Subsetting
+      + Logical Tests
+      + Boolean Operators
+ 3. Missing Information
+      + na.rm
+      + is.na
+  
+We will use these new skills to change the point system of the deck.
+
+Make a copy of the deck so you can always reload the pristine version:
+
+```{r}
+deck2 <- deck
+```
+
+#### Changing Values in Place
+
+Start by creating a simple vector of zeros:
+
+```{r}
+vec <- c(0, 0, 0, 0, 0, 0)
+vec
+```
+
+Select the first value using hard brackets:
+
+```{r}
+vec[1]
+```
+
+Try modifying the first value with the assignment operator `<-` :
+
+```{r}
+vec[1] <- 1000
+vec
+```
+
+You can replace multiple values, as long as the number of new values ==  number of selected values:
+
+```{r}
+vec[c(1, 3, 5)] <- c(1, 1, 1)
+vec
+```
+
+Whereas this will not work: 
+
+```{r}
+vec[4:6] <- vec[4:6] + 1
+vec
+```
+
+You can also create new values that do not exist yet, by expanding the object:
+
+```{r}
+vec[7] <- 0
+vec
+```
+
+Try adding a new variable to your data set using `$`:
+
+```{r}
+deck2$new <- 1:52
+deck2
+```
+
+Then try removing it with the symbol `NULL`:
+
+```{r}
+deck2$new <- NULL
+```
+
+Let's create a "War Deck", for which aces have the value, 14 rather than 1.
+
+First, use R's notiation system to identify the aces:
+
+```{r}
+deck2[c(13, 26, 39, 52), ]
+```
+
+You can also single out just the value of the aces (in the 3rd column of deck2):
+
+```{r}
+deck2[c(13, 26, 39, 52), 3]
+```
+
+And do it more efficiently with a vector:
+
+```{r}
+deck2$value[c(13, 26, 39, 52)]
+```
+
+Now reassign the aces to 14:
+*Hint*: You can use a vector of 14s, or just one 14 which R will recycle to all elements.
+
+```{r}
+deck2$value[c(13, 26, 39, 52)] 
+deck2$value[c(13, 26, 39, 52)]
+```
+
+Notice the values change "in place".
+
+```{r}
+deck2
+```
+
+The same technique works for vectors, matrices, arrays, lists, and data frames!
+
+In this example, we knew where the aces were but if the deck was shuffled, how would we know which values to reassign?
+
+Shuffle the deck and save it as deck3:
+
+```{r}
+deck3 <- shuffle(deck)
+deck3
+```
+
+Now the aces are hard to find!
+
+#### Logical Subsetting
+
+Logical subsettingcan be used to return elements that match a TRUE:
+
+```{r}
+vec
+vec[c(F, F, F, F, T, F, F)]
+```
+
+However, you don't have to type out a long vector of T and F. Use a *Logical Test* using logical operators:
+E.g.,use the operators:
+
+ + `>` greater than
+ + `>=` greater than or equal to
+ + `<` less than
+ + `<=` less than or equal to
+ + `==` equal to
+ + `!=` not equal to
+ + `%in%` exists within the vector (this one is very handy!)
+
+```{r}
+1 > 2
+1 > c(0, 1, 2)
+c(1, 2, 3) == c(3, 2, 1)
+```
+
+Note: `%in%` does not use element-wise execution, it asks *are the values on the left are on the right side?*:
+
+```{r}
+1 %in% c(3, 4, 5)
+c(1, 2) %in% c(3, 4, 5)
+c(1, 2, 3) %in% c(3, 4, 5)
+```
+
+Remember: `=` is the same as the assignment operateor `<-` in R. Be careful to use `==` when you want to evaluate equivalence (is equal).
+
+**Exercise:** Extract the face column of `deck2`, and test if it is equal to `ace`:
+
+First convert desk faces to characters:
+```{r}
+deck2$face 
+deck2$face <- as.character(deck2$face)
+```
+
+Now perform the *logical test*:
+
+```{r}
+deck2$face == "ace"
+```
+
+You can also count the number of TRUE (treated as 1):
+
+```{r}
+sum(deck2$face == "ace")
+```
+
+You can also use this on your shuffled `deck3`, to the same effect:
+
+```{r}
+deck3$face == "ace"
+```
+
+The logical operator now provides row *indices* to extract rows or individual elements:
+
+```{r}
+deck3$value[deck3$face == "ace"]
+```
+
+Now use the assignment as before to change the values of ace to 14:
+
+```{r}
+deck3$value[deck3$face == "ace"] <- 14
+```
+
+Check to see if aces now have value of 14:
+
+```{r}
+head(deck3, 20) 
+```
+
+They do!
+
+Logical subsetting is a key component of vectorized programming, a coding style that lets you write fast and efficient R code. We come back to this in Chapter 10.
+
+Let's adapt the deck for Hearts, where every card has a value of zero, except suit of hearts, which has a value of 1.
+
+```{r}
+deck4 <- deck
+deck4$value <- 0
+head(deck4, 13)
+```
+
+To assign 1 to every card in deck4 that has a suit of hearts, first find the hearts:
+
+```{r}
+deck4$suit == "hearts"
+```
+
+Check the subset is correct:
+
+```{r}
+deck4$value[deck4$suit == "hearts"]
+```
+
+Assign the new value of 1:
+
+```{r}
+deck4$value[deck4$suit == "hearts"] <- 1
+deck4$value[deck4$suit == "hearts"]
+```
+
+Finally, change the queen of spades to value of 13. Let's find the queen of spades:
+
+```{r}
+deck4[deck4$face == "queen", ] 
+deck4[deck$suit == "spades", ] 
+```
+
+We can't do it with this code! The first line gives all queens and the second line gives all spades. 
+
+#### Boolean Operators
+
+To identify just the queen of spades, we want to use *Boolean Opereators* (and `&`, or `|`) to combine Logical Tests together.
+
+There are six Boolean operators:
+
+ + `&` both conditions (and)
+ + `|` one or other condition
+ + `xor` exactly one condition
+ + `!` false condition
+ + `any` any conditions
+ + `all` all conditions
+ 
+Remember to include the complete test on both sides of the Boolean operator:
+
+```{r}
+x <- 5
+x > 2 & x < 9
+# x > 2 & < 9
+```
+
+If you remove the # sign, the last line gives an error when you try to run it because the test is incomplete on the right side.
+
+
+Boolean opeartors follow the same element-wise execution:
+
+```{r}
+a <- c(1, 2, 3)
+b <- c(1, 2, 3)
+c <- c(1, 2, 4)
+```
+
+```{r}
+a == b
+b == c
+a == b & b == c
+```
+
+Use Boolean operator to locate the queen of spades:
+
+```{r}
+deck4$face == "queen" & deck4$suit == "spades"
+```
+
+Note that we join the two logical tests with a Boolean operator.
+
+Save the results to its own object to make it easier to work with:
+
+```{r}
+queenOfSpades <- deck4$face == "queen" & deck4$suit == "spades"
+```
+
+Make sure it works:
+
+```{r}
+deck4[queenOfSpades, ]
+```
+
+Now assign the new value:
+
+```{r}
+deck4$value[queenOfSpades] <- 13
+```
+
+Set up some new objects to try out more logical tests:
+
+```{r}
+w <- c(-1, 0, 1)
+x <- c(5, 15)
+y <- "February"
+z <- c("Monday", "Tuesday", "Friday")
+```
+
+Is w positive?
+
+```{r}
+w > 0
+```
+
+Is x greater than 10 and less than 20?
+
+```{r}
+x > 10 & x < 20
+```
+
+Is object y the word February?
+
+```{r}
+y == "February"
+```
+
+Is every value in z a day of the week?
+
+```{r}
+all(z %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+```
+
+
+Finally, let's create a card deck to play Blackjack, where all face cards have a value of 10, and ace is either 1 or 11.
+
+Start by creating a new deck:
+
+```{r}
+deck5 <- deck
+head(deck5)
+```
+
+Change the value of face cards in none fell swoop with `%in%`.
+
+First identify the indices:
+```{r}
+facecard <- deck5$face %in% c("king", "queen", "jack")
+deck5[facecard, ]
+```
+
+Then conver the values: 
+
+```{r}
+deck5$value[facecard] 
+deck5$value[facecard] <- 10
+```
+
+Check:
+
+```{r}
+head(deck5, 10)
+```
+
+Right now, we don't have enough information to assign the ace a value (it depends on the player's other cards)!
+
+
+#### Missing Information
+In R, `NA` stands for "Not Available" and is used as a placeholder for missing values. Because we do not know what `NA` is, it will propogate through any calculations:
+
+```{r}
+NA + 1 
+```
+
+Missing values `NA` help you maintain complete data structure rather than having gaps. However they also propogate to other compuations:
+
+```{r}
+mean(c(NA, 1:50))
+```
+
+Most R functions come with an optional argument, `na.rm`, which stands for `NA` remove. If `na.rm = TRUE`, it will ignore `NA`s:
+
+```{r}
+mean(c(NA, 1:50), na.rm = T)
+```
+
+Again, because we don't know what `NA` is, we also can't identify it using logical tests (remove # sign):
+
+```{r}
+# NA == NA
+# c(1, 2, 3, NA) == NA 
+```
+
+But, R uses the function `is.na()` to identify if a value is an `NA`:
+
+```{r}
+is.na(NA)
+```
+
+Use `is.na()` to identify the index of `NA` in a data structure such as a vector:
+
+```{r}
+vec <- c(1, 2, 3, NA)
+is.na(vec)
+```
+
+So, finally, set all ace values to `NA`, because we don't know the real value until the end of a players turn:
+
+```{r}
+deck5$value[deck5$face == "ace"] <- NA
+head(deck5, 13)
+```
+
+You should now have a familiarity with:
+
+ 1. Changing Values in Place
+ 2. Logical Subsetting
+      + Logical Tests
+      + Boolean Operators
+ 3. Missing Information
+      + na.rm
+      + is.na
+  
+**Congrats! You have now finished Chapter 5!**
+
+$~$
+
+## Chapter 6: Environments
+
+In this chapter we will cover:
+
+ 1. Environments
+ 2. Working with Environments
+      + The Active Environment
+      + Scoping Rules
+      + Assignment
+      + Evaluation
+      + Closures
+      
+To finalize the functions `deal()` and `shuffle()` we need to consider how R uses environments.
+
+R saves every object inside of an environment, a list-like object that resembles a computer folder. Each environment is connected to a hierarchy of environments. You can see R's environment system with:
+
+```{r}
+# install.packages("pryr") # remove comment to run
+library(pryr)
+parenvs(all = TRUE)
+```
+
+The environments are ranked from "lowest" to "highest". The highest environment being `R_EmptyEnv` and lowest environment being `R_GlobalEnv`.
+
+Although seemingly like a folder directory hierarchy there are two main differences:
+
+ + R's environments are stored in RAM
+ + R's environments are not searchable down the environment "tree"
+
+#### Environment Helper Functions
+
+Look at an environment:
+
+```{r}
+as.environment("package:stats")
+```
+
+Which shows the path too.
+
+Three environments come with their own accessor functions:
+
+```{r}
+globalenv()
+baseenv()
+emptyenv()
+```
+
+Look up an environment's parent with:
+
+```{r}
+parent.env(globalenv())
+```
+
+Notice that the highest environment has no parent:
+
+```{r}
+#  parent.env(emptyenv()) # will return an error if you run without #
+```
+
+You can view objects saved in an environment with:
+
+```{r}
+ls(emptyenv())
+ls(globalenv())
+```
+
+Load the deck again to check:
+
+```{r}
+deck <- read.csv("deck.csv")
+ls(globalenv())
+```
+
+And learn more about the environment structure:
+
+```{r}
+ls.str(globalenv())
+```
+
+The base environment has many objects:
+
+```{r}
+ls.str(baseenv())
+```
+
+RStudio's environment pane displays all the objects in your global environment.
+
+You can use the `$` syntax to access the `deck` object from the global environment accessor:
+
+```{r}
+head(globalenv()$deck, 3)
+```
+
+You can also use the `assign()` function to save an object into an environment:
+
+```{r}
+assign("new", "Hello Global", envir = globalenv())
+globalenv()$new
+```
+
+Assign works similar to <-.
+
+#### The Active Environment
+
+Check the active environment using:
+
+```{r}
+environment()
+```
+
+This is usual unless you are running a function. Any object you create at the command line will be saved in the global environment. Think of it as your user work space.
+
+**Scoping Rules** are used to look up objects:
+
+ 1. R Looks for objects in the current environment - global environment for command line
+ 2. If not found, R looks up and up the parent environment tree
+
+Remember, functions are objects and will be searched for like anything else
+in the environment tree.
+
+**Assignment**: Assigning an object a new value will overwrite it:
+
+```{r}
+new
+new <- "Hello Active"
+new
+```
+
+But when functions are called, *R creates a new active environment to evaluate the function in* because temporary objects within the function could otherwise overwrite global environment objects.
+
+**Evaluation**: Temporary environments for function runs are called *run time environments*. Let's write a function to show what environments look like:
+
+```{r}
+show_env <- function(){
+  list(ran.in = environment(),
+       parent = parent.env(environment()),
+       objects = ls.str(environment()))
+}
+```
+
+`show_env()` is a function, so when it is called, R creates a run time environment. The results of `show_env()` will therefore show the details of the run time environment:
+
+```{r}
+show_env()
+```
+
+Notice R created a new environment `0x7f8bf05382b0`to run `show_env()`. It contained no objects, and its parent environment was the global environment. If you run it again, you'll see it creates a new but otherwise identical temporary environment:
+
+```{r}
+show_env()
+```
+R will connect a function's run-time environment to the environment that the function was *first created in*.
+
+Look up a functions origin environment to show it was created in the global environment:
+
+```{r}
+environment(show_env)
+```
+
+But the origin environment can also be a parent environment:
+
+```{r}
+environment(parenvs)
+```
+
+Create some objects within the `show_env()` function:
+
+```{r}
+show_env <- function(){
+  a <- 1
+  b <- 2
+  c <- 3
+  list(ran.in = environment(),
+       parent = parent.env(environment()),
+       objects = ls.str(environment()))
+}
+show_env()                                         
+```
+
+The objects `a-c` are stored in a safe, out-of-the-way run-time environment.
+A function with arguments will copy the objects to the runtime environment:
+
+```{r}
+foo <- "take me to your runtime"
+show_env <- function(x = foo){
+  list(ran.in = environment(),
+       parent = parent.env(environment()),
+       objects = ls.str(environment()))
+}
+show_env()
+```
+
+We can refer to the working environment where you call the function from the *calling environment*.
+
+**Putting it all together**:
+
+ 1. R sets up a new run-time environment, as the child of the function's origin environment
+ 2. R copies each of the arguments into the run-time environment and makes it the active environment
+ 3. R runs the code in the body of the function:
+    + Stores any created objects
+    + Uses scoping rules for any called objects
+    + Usually a function only calls its own arguments
+ 4. R ends the function, switches the environment back, and runs any other commands in line
+ 
+So, for example, if you save the result to `<-`, it will be saved in the *calling* environment.
+
+So, how to fix `deal()` and `shuffle()`?
+
+Redefine `deal()` (to deal the top card of the deck):
+
+```{r}
+deal <- function(){
+  deck[1, ]
+}
+deal()
+```
+ 
+It still works even without the `cards` argument which copies over the deck because the run-time environment scopes up to the global environment (parent of the active function environment) to look for `deck`.
+
+We want `deal()` to remove the top card after dealing it.
+
+Save a pristine `deck`:
+```{r}
+DECK <- deck
+```
+
+Remember how to remove the top card using a negative dataframe index:
+
+```{r}
+deck <- deck[-1, ]
+head(deck)
+```
+Now apply it to `deal()`:
+
+```{r}
+deal <- function(){
+  card <- deck[1, ]
+  deck <- deck[-1, ]
+  card
+}
+deal()
+deal()
+```
+
+What's wrong here? R only removes the top card in the run-time environment. We need to assign `deck[-1, ]` to an object named `deck` in the global environment:
+
+```{r}
+deal <- function(){
+  card <- deck[1, ]
+  assign("deck", deck[-1, ], envir = globalenv())
+  card
+}
+deal()
+deal()
+deal()
+```
+
+Now lets finalize `shuffle()`:
+
+```{r}
+deck <- DECK
+shuffle <- function(cards){
+  random <- sample(1:52, size = 52)
+  cards[random, ]
+}
+```
+
+Remember that `shuffle()` returns a shuffled object, rather than shuffling `deck`:
+
+```{r}
+shuffle(deck)
+a <- shuffle(deck)
+a
+
+```
+
+Rewrite `shuffle()` so it replaces deck with a shuffled `DECK` (in the global environment). It should have no assignments and return no output:
+
+```{r}
+shuffle <- function(){
+  random <- sample(1:52, size = 52)
+  assign("deck", DECK[random, ], envir = globalenv())
+}
+```
+
+Check it works:
+
+```{r}
+shuffle(); deck
+shuffle(); deck
+shuffle(); deck
+```
+
+Now we can shuffle the cards and deal a hand of blackjack:
+
+```{r}
+shuffle() # shuffles a complete new deck
+deal() # deals the top card and removes it from the deck
+deal()
+deal()
+```
+
+Restore `deck` again:
+
+```{r}
+deck <- DECK
+deck
+```
+To save objects in a safe place, such as a run time environment, create a function that takes `deck` as an argument, saves a copy as `DECK` and its own copies of `deal()` and `shuffle()`:
+
+```{r}
+setup <- function(deck) {
+  DECK <- deck
+  
+  DEAL <- function() {
+    card <- deck[1, ]
+    assign("deck", deck[-1, ], envir = globalenv())
+    card
+  }
+  
+  SHUFFLE <- function() {
+    random <- sample(1:52, size = 52)
+    assign("deck", DECK[random, ], envir = globalenv())
+  }
+}
+```
+
+When you run `setup()`, R will create a run-time environment to store the objects in:
+
+```{r}
+setup(deck)
+```
+
+However they are now hard to use. Change `setup()` to return `DEAL` and `SHUFFLE` using a list:
+
+```{r}
+setup <- function(deck) {
+  DECK <- deck
+  
+  DEAL <- function() {
+    card <- deck[1, ]
+    assign("deck", deck[-1, ], envir = globalenv())
+    card
+  }
+  
+  SHUFFLE <- function() {
+    random <- sample(1:52, size = 52)
+    assign("deck", DECK[random, ], envir = globalenv())
+  }
+  list(deal = DEAL, shuffle = SHUFFLE)
+}
+setup(deck) 
+```
+
+Now the functions are returned in a list when you run `setup()`. 
+
+You can assign it to a new object in the global environment:
+
+```{r}
+cards <- setup(deck)
+```
+
+And save each element to its own object:
+
+```{r}
+deal <- cards$deal
+shuffle <- cards$shuffle
+deal
+shuffle
+```
+
+Notice the origin environment is now the run-time environment R made when you ran `setup()`. R will always be able to find `DECK` and `deck,` but without altering them:
+
+This arrangement is called *closure*: Setup's run-time environment "encloses" the `deal()` and `shuffle()` functions. The enclosing environment is not on the search path for any other R function or environment:
+
+Try running them:
+
+```{r}
+shuffle()
+deck
+shuffle()
+deck
+nrow(deck)
+
+deal()
+deal()
+nrow(deck)
+```
+Notice the global `deck` is still being updated. Change the `envir` argument in assign to reference the parent environment which is setup's run-time environment (the "enclosing" environment):
+
+```{r}
+setup <- function(deck) {
+  DECK <- deck
+  
+  DEAL <- function() {
+    card <- deck[1, ]
+    assign("deck", deck[-1, ], envir = parent.env(environment()))
+    card
+  }
+  
+  SHUFFLE <- function() {
+    random <- sample(1:52, size = 52)
+    assign("deck", DECK[random, ], envir = parent.env(environment()))
+  }
+  list(deal = DEAL, shuffle = SHUFFLE)
+}
+```
+
+Now `deck` should remain unchanged:
+
+```{r}
+cards <- setup(deck) 
+deal <- cards$deal
+shuffle <- cards$shuffle
+
+deck
+shuffle()
+deck
+```
+
+Notice you can now assign a shuffled deck to a new object without changing deck:
+
+```{r}
+deck_2 <- shuffle()
+deck_3 <- shuffle()
+deck_2 
+deck_3
+deck
+```
+Now `shuffle()` gives a new shuffled deck, but doesn't alter global environment deck because the functions now only alter deck in the enclosed (`setup()`) run-time environment. You can remove the global environment copy of deck and play with just the cards functions:
+
+```{r}
+rm(deck)
+
+
+deal()
+shuffle()
+deal()
+shuffle()
+deal()
+```
+
+The real value of this knowledge is knowing how to diagnose function errors/behavior.
+
+You should now be familiar with:
+
+ 1. Environments
+ 2. Working with Environments
+      + The Active Environment
+      + Scoping Rules
+      + Assignment
+      + Evaluation
+      + Closures
+      
+**Congrats, you've now completed Chapter 6!**
+
+$~$
+
+## Chapter 7: Programs
+
+In this chapter we will cover:
+
+ 1. Programs
+      + Strategy (for coding programs)
+      + Sequential Steps
+      + Parallel Cases
+ 2. if Statements
+ 3. else Statements
+ 4. Lookup Tables
+ 5. Code Comments
+ 
+In this chapter we will build a real, working slot machine by running an R function `play()`.
+
+Let's start with a function that randomly selects 3 symbols:
+
+```{r}
+get_symbols <- function() {
+  wheel <- c("DD", "7", "BBB", "BB", "B", "C", "0")
+  sample(wheel, size = 3, replace = TRUE,
+         prob = c(0.03, 0.03, 0.06, 0.1, 0.25, 0.01, 0.52))
+}
+get_symbols()
+```
+
+The goal is to arrive at this function where `score()` is a function that looks up a symbol combination for a score, as if you were playing a slot machine:
+
+```{r}
+play <- function() {
+  symbols <- get_symbols()
+  print(symbols)
+  score(symbols)
+}
+```
+
+For now, if you remove the `#` sign to try to execute `play()` it will return an error that the function `score()` doesn't exist:
+
+```{r}
+# play()
+```
+
+Strategy is required for complex coding tasks. Here is a suggested strategy.
+
+1) **Sequential Steps** Break the task down into steps:
+
+```{r}
+play <- function() {
+  # step 1: generate symbols
+  symbols <- get_symbols()
+  
+  # step 2: display the symbols
+  print(symbols)
+  
+  # step 3: score the symbols
+  score(symbols)
+}
+```
+
+2) **Parallel cases** Spot groups of similar cases within a task.
+
+In our example, 3 of a kind (e.g. "B", "B", "B"), all bars, and "other" (count cherries) are three different cases (diamonds add extra complexity).
+
+
+In R, **if statements** are useful for parallel cases. An **if statement** tells R to do a certain task for a certain case:
+
+`if (this) {` # is a logical test: if `(this)` evaluates to TRUE, then...
+  `that` # this code in braces will be run
+`}`
+
+For example:
+
+```{r}
+num <- -2
+if (num < 0 ) {
+  num <- num * -1
+}
+num
+```
+
+If statements have to evaluate to a *single* T or F. You can condense vectors of logical values to single T or F with functions "any" and "all":
+
+```{r}
+num <- c(-2, 0, 2)
+if (any(num < 0)) {
+  num <- num * -1
+}
+num
+```
+
+```{r}
+num <- c(-2, 0, 2)
+if (all(num < 5)) {
+  num <- num * -1
+}
+num
+```
+
+```{r}
+num <- c(-2, 0, 2)
+if (all(num > 5)) {
+  num <- num * -1
+}
+num
+```
+
+You can also add more lines between the braces:
+
+```{r}
+num <- -1
+if (num < 0 ) {
+  print("num is negative.")
+  print("Don't worry, I'll fix it.")
+  num <- num * -1
+  print("num is now positive.")
+}
+num
+```
+
+**else statements** `else` is a counterpart to `if`, that extends if to include a second case when the conditions is FALSE:
+
+`if (this) {`
+  `Plan A`
+`} else {`
+  `Plan B`
+`}`
+
+For example you may want to round a decimal to the nearest integer. `trunc()` takes a number and returns portion left of decimal place:
+
+```{r}
+a <- 3.14
+dec <- a - trunc(a) # so a - trunc(a) is a convenient way to return just the decimal of a
+dec 
+```
+
+```{r}
+if (dec >= 0.5) {
+  a <- trunc(a) + 1
+} else {
+  a <- trunc(a) 
+}
+a
+```
+
+```{r}
+if (dec <= 0.5) {
+  a <- trunc(a) + 1
+} else {
+  a <- trunc(a) 
+}
+a
+```
+
+If you need more than two mutually exclusive cases, string two `else` statements together:
+
+```{r}
+a <- 1
+b <- 1
+
+if (a > b) {
+  print("A wins!")
+} else if (a < b) {
+  print("B wins!")
+} else {
+  print("Tie.")
+}
+```
+
+If two `if` statements describe mutually exclusive events (i.e. cannot occur together) it is better to join with `else if` rather than list separately, which lets R ignore the second statement if the first is TRUE.
+
+Let's apply these rules to our slot machine example, breaking it into 8 steps:
+
+```{r}
+# if ( # Case 1: all the same) {          1
+#   prize <- # look up the prize          2
+#   } else if ( # Case 2: all bars) {     3
+#     prize <- # assign $5                4
+#     } else {
+#       # count cherries                  5
+#       prize <- # calculate a prize      6
+#     }
+
+# Count diamonds                          7
+# double the prize if necessary           8
+```
+
+You could try and code it all at once but its easier to start with a concrete example for each step.
+
+1) All the same:
+
+```{r}
+symbols <- c("7", "7", "7")
+```
+
+Define a formal sub-task: "test whether the symbols are three of a kind"
+English: a vector named `symbols` will contain three of the same symbol if  the first element of symbols is equal to the second... is equal to the third...
+
+This code would work:
+
+`symbols[1] == symbols[2] & symbols [2] == symbols[3]` 
+
+A faster approach (to build up to over time) would be:
+
+`length(unique(symbols)) == 1`  
+
+Now assign the three of a kind test to an object and add to the slot machine skeleton:
+
+```{r}
+same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+```
+Note: `&&` or `||` speed up evaluation by skipping the second test if the first is not `TRUE`
+
+Add step 1 to our skeleton code:
+
+```{r}
+# if (same) {
+#   prize <- # look up the prize
+# } else if ( # Case 2: all bars) {
+#   prize <- # assign $5
+#   } else {
+#     # count cherries 
+#     prize <- # calculate a prize
+#   }
+```
+
+Next formal sub-task: "symbols are all of type bar"
+English: a vector named symbols will contain three bar symbols if the first element of symbols contains one or more Bs and the second contains one or more Bs and the third contains one or more Bs
+
+Here you would need `|` "or" operators for the different cases of "B", "BB", "BBB".
+
+However, `%in%` is a more efficient approach to replace multiple `|`:
+
+```{r}
+symbols <- c("B", "BBB", "BB")
+all(symbols %in% c("B", "BB", "BBB"))
+```
+
+Now add the third step (bars):
+
+```{r}
+same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+bars <- symbols %in% c("B", "BB", "BBB")
+```
+
+```{r}
+# if (same) {
+#   prize <- # look up the prize
+# } else if (all(bars)) {
+#   prize <- # assign $5
+# } else {
+#   # count cherries 
+#   prize <- # calculate a prize
+# }
+```
+
+Now we want to assign prizes to the different symbol combinations. To do so efficiently, we need to use **lookup tables**.
+
+
+### Lookup Tables
+
+Before we look at lookup tables, we can reconsider subsetting a vector:
+
+```{r}
+payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+             "B" = 10, "C" = 10, "0" = 0)
+payouts # will return all the values
+payouts["DD"] # but you can also index by name
+```
+
+If you only want the value, without the name:
+
+```{r}
+unname(payouts["DD"])
+```
+
+You can also index using numeric values:
+
+```{r}
+unname(payouts[1])
+```
+
+Now we can add code to look up the value for 3 of a kind:
+
+```{r}
+# same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+# bars <- symbols %in% c("B", "BB", "BBB")
+# 
+# if (same) {
+#   payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+#                "B" = 10, "C" = 10, "0" = 0)
+#   prize <- unname(payouts[symbols[1]])
+# } else if (all(bars)) {
+#   prize <- # assign $5
+# } else {
+#   # count cherries 
+#   prize <- # calculate a prize
+# }
+```
+
+
+We can also add the second case which is simply $5:
+
+```{r}
+# same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+# bars <- symbols %in% c("B", "BB", "BBB")
+# 
+# if (same) {
+#   payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+#                "B" = 10, "C" = 10, "0" = 0)
+#   prize <- unname(payouts[symbols[1]])
+# } else if (all(bars)) {
+#   prize <- 5
+# } else {
+#   # count cherries 
+#   prize <- # calculate a prize
+# }
+```
+
+For the 3rd case, we need to compute how many cherries are in symbols:
+
+```{r}
+symbols <- c("C", "DD", "C")
+```
+
+Create a test to identify which elements of symbols are "C":
+
+```{r}
+symbols == "C"
+```
+
+How might you count the number of Cs? (remember coercion rules):
+
+```{r}
+sum(symbols == "C")
+```
+
+We can also add the first part of the third case to the code:
+
+```{r}
+# same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+# bars <- symbols %in% c("B", "BB", "BBB")
+# 
+# if (same) {
+#   payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+#                "B" = 10, "C" = 10, "0" = 0)
+#   prize <- unname(payouts[symbols[1]])
+# } else if (all(bars)) {
+#   prize <- 5
+# } else {
+#   cherries <- sum(symbols == "C")
+#   prize <- # caculate a prize
+# }
+```
+
+3 cherries are already covered by case 1. 
+2 cherries gets `$5`, 1 cherry gets `$2`, no cherries gets `$0`
+
+We could write an inefficient 'if' tree:
+
+```{r}
+# if (cherries == 2) {
+#   prize <- 5
+# } else if (cherries == 1) {
+#   prize <- 2
+# } else {
+#   prize <- 0
+# }
+```
+
+But a lookup table is faster
+
+```{r}
+c(0, 2, 5)
+# notice the first element is the 0
+c(0, 2, 5)[1]
+# the second element is 2
+c(0, 2, 5)[2]
+```
+
+Remember that cherries could equal 0, 1, or 2 (3 is already covered). If we use the value of cherries as the index, and cherries = 0, then will return nothing:
+
+```{r}
+c(0, 2, 5)[0]
+```
+
+So we need to offset the indexing by 1:
+
+```{r}
+c(0, 2, 5)[0 + 1] # cherries(0) + 1
+c(0, 2, 5)[1 + 1] # cherries(1) + 1
+```
+
+We can also add the second part of the third case to the code:
+
+```{r}
+same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+bars <- symbols %in% c("B", "BB", "BBB")
+
+if (same) {
+  payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+               "B" = 10, "C" = 10, "0" = 0)
+  prize <- unname(payouts[symbols[1]])
+} else if (all(bars)) {
+  prize <- 5
+} else {
+  cherries <- sum(symbols == "C")
+  prize <- c(0, 2, 5)[cherries + 1]
+}
+
+```
+
+You can usually avoid `if` trees by using lookup tables (but not always).
+
+As a general rule:
+      + Use an 'if' tree if each branch runs different code
+      + Use a look up table if each branch only assigns a different value
+
+The final task is to double the prize for every diamond present. How do we code this? 
+Remember that 1 = 2 ^ 0; 2 = 2 ^ 1; 4 = 2 ^ 2; 8 = 2 ^ 3
+
+Write a method in English then write the code:
+
+Formal sub-task: "double prize for every diamond present"
+English: an object named prize will be multiplied by 2 raised to a number that equals the number of diamonds contained in the symbols vector
+
+```{r}
+diamonds <- sum(symbols == "DD")
+prize * 2 ^ diamonds
+```
+
+W can now add the last code line:
+
+```{r}
+same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+bars <- symbols %in% c("B", "BB", "BBB")
+
+if (same) {
+  payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+               "B" = 10, "C" = 10, "0" = 0)
+  prize <- unname(payouts[symbols[1]])
+} else if (all(bars)) {
+  prize <- 5
+} else {
+  cherries <- sum(symbols == "C")
+  prize <- c(0, 2, 5)[cherries + 1]
+}
+diamonds <- sum(symbols == "DD")
+prize * 2 ^ diamonds
+```
+
+Congrats! You now have a working `score()` script you can save to a function!
+
+First, let's add some comments to the code to show what each section does:
+```{r}
+# identify case
+same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+bars <- symbols %in% c("B", "BB", "BBB")
+
+# get prize
+if (same) {
+  payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+               "B" = 10, "C" = 10, "0" = 0)
+  prize <- unname(payouts[symbols[1]])
+} else if (all(bars)) {
+  prize <- 5
+} else {
+  cherries <- sum(symbols == "C")
+  prize <- c(0, 2, 5)[cherries + 1]
+}
+
+# adjust prize for diamonds
+diamonds <- sum(symbols == "DD")
+prize * 2 ^ diamonds
+```
+
+Now wrap it in a function (remember what arguments (inputs) it will need):
+
+```{r}
+score <- function(symbols) {
+  # identify case
+  same <- symbols[1] == symbols[2] && symbols [2] == symbols[3] 
+  bars <- symbols %in% c("B", "BB", "BBB")
+  
+  # get prize
+  if (same) {
+    payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+                 "B" = 10, "C" = 10, "0" = 0)
+    prize <- unname(payouts[symbols[1]])
+  } else if (all(bars)) {
+    prize <- 5
+  } else {
+    cherries <- sum(symbols == "C")
+    prize <- c(0, 2, 5)[cherries + 1]
+  }
+  
+  # adjust prize for diamonds
+  diamonds <- sum(symbols == "DD")
+  prize * 2 ^ diamonds
+}
+
+score(symbols)
+```
+
+Notice because we did not assign the final prize value to an object, it outputs instead.
+
+You can now combine it with the play function:
+
+```{r}
+play <- function(){
+  symbols <- get_symbols()
+  print(symbols)
+  score(symbols)
+}
+```
+
+Now you can play with your slot machine:
+
+```{r}
+play()
+```
+
+**Congrats!** You've now finished Chapter 7!
+
+Summary: An R program is a set of instructions for your computer to follow that has been organized into a sequences of steps and cases. A program may seem impossible to write, but don't panic. Divide the job into simple tasks. Work on each task one at a time. Describe each task in English, then convert to R code. Test each solution against concrete examples as you go. Once each of your subtasks works, combine your code into a function you can share and reuse.
+
+You should now be familiar with:
+
+ 1. Programs
+      + Strategy (for coding programs)
+      + Sequential Steps
+      + Parallel Cases
+ 2. if Statements
+ 3. else Statements
+ 4. Lookup Tables
+ 5. Code Comments
+
+$~$
+
+## Chapter 8: S3
+
+In this chapter we will cover:
+
+  1. The S3 System
+  2. Attributes
+  3. Generic Functions
+  4. Methods
+      + Method Dispatch
+  5. Classes
+  6. S3 and Debugging
+  7. S4 and R5
+
+We will fix the slot machine in two ways: 
+
+  1. Improve appearance out of output
+  2. Make the output assign-able to an object 
+  
+Notice the output of play is quite messy:
+
+```{r}
+one_play <- play()
+one_play
+```
+
+You can fix both of these problems with the "S3 system".
+
+The S3 system governs how R handles objects of different classes. For example when you print a numeric object it looks like this:
+
+```{r}
+num <- 10000000
+print(num)
+```
+
+Whereas if you give the number a POSIXct followed by POSIXt:
+
+```{r}
+class(num) <- c("POSIXct", "POSIXt")
+print(num)
+```
+
+R's S3 system applies for any object with a class and is built around 3 components:
+
+  + attributes
+  + generic functions
+  + methods
+
+Attributes: extra information appended to an object. E.g. rows and column names appended to a dataframe object (and "data.frame" as a class)
+
+```{r}
+attributes(DECK)
+```
+
+You've already used:
+
+```{r}
+names(DECK)
+dim(DECK)
+class(DECK)
+```
+
+But there is also:
+
+```{r}
+row.names(DECK)
+```
+
+You can assign an object a new attribute altogether:
+
+```{r}
+levels(DECK) <- c("level 1", "level 2", "level 3")
+attributes(DECK)
+```
+
+R will let you add any attributes and often ignores them. R will only complain whenit needs an atribute and it is missing.
+ 
+Look at the attributes of `one_play()`:
+
+```{r}
+attributes(one_play)
+```
+
+You can assign attributes with `attr()`. It takes two arguments: 
+  1. An R object
+  1. A name of an attribute
+  
+```{r}
+attr(one_play, "symbols") <- c("B", "0", "B")
+attributes(one_play)
+```
+  
+Or look up a specific attribute:
+```{r}
+attr(one_play, "symbols")
+one_play
+```
+
+Notice the attribute is listed below the value, however, if the attribute changes the class, it may simply alter the display.
+
+R will ignore attributes unless they need them:
+
+```{r}
+one_play + 1
+```
+
+Modify `play()` to return a prize that contains the symbols as an attribute:
+
+```{r}
+play <- function(){
+  symbols <- get_symbols()
+  prize <- score(symbols)
+  attr(prize, "symbols") <- symbols
+  prize
+}
+```
+
+Notice that now the prize and the associated symbols are returned:
+
+
+```{r}
+one_play <- play()
+attributes(one_play)
+play()
+```
+
+Assign this new version of `play()` to `two_play()`:
+
+```{r}
+two_play <- play()
+two_play
+```
+
+You can also set multiple attributes at once with `structure()`:
+
+```{r}
+play <- function(){
+  symbols <- get_symbols()
+  structure(score(symbols), symbols = symbols)
+}
+play()
+```
+
+Assign this efficient method to a new object:
+
+```{r}
+three_play <- play()
+three_play
+```
+
+Now you can look up attributes to display the slot results nicely:
+
+```{r}
+slot_display <- function(prize){
+  
+  # extract symbols
+  symbols <- attr(prize, "symbols")
+  
+  # collapse symbols into a single string
+  symbols <- paste(symbols, collapse = " ")
+  
+  # combine symbol with prize as a regular expression
+  # \n is regular expression for new line (i.e. return or enter)
+  string <- paste(symbols, prize, sep = "\n$")
+  
+  # display regular expression in console without quotes
+  cat(string)
+  
+}
+```
+
+Try it out:
+
+```{r}
+slot_display(three_play)
+```
+
+`slot_display` expects an object with a numerical value and a `symbols` attribute.
+
+`cat()` (concatenate) is similar to `print()`, but doesn't output quotation marks, and takes other operations like `\n` for new line:
+
+```{r}
+string <- paste("symbols", "prize", sep = "\n$")
+string
+cat(string)
+```
+
+So you can use `slot_display()` as a manually defined function to clean up the output of play:
+
+```{r}
+slot_display(play())
+```
+
+But you can also clean up output (and do other things) automatically with...
+
+
+#### Generic Functions
+
+R uses generic functions frequently in the background, such as:
+
+```{r}
+print(pi)
+pi
+```
+
+```{r}
+print(head(DECK))
+head(DECK)
+```
+
+```{r}
+print(play())
+```
+
+Notice that `print()` as a generic function does different things in different cases:
+
+```{r}
+num <- 100000
+print(num)
+```
+
+Versus... 
+
+```{r}
+class(num) <- c("POSIXct", "POSIXt")
+print(num)
+```
+
+`Print()` displayed the value of the object num differently when its class changed.
+
+```{r}
+print # when you call print, print calls a special function 'UseMethod"
+```
+
+`UseMethod()` checks the class of the first argument in print and passes all the arguments to a special function designed for that class:
+
+```{r}
+print.POSIXct # is the function for dates
+print.factor # is for factors
+```
+
+`.POSIXct` and `.factor` are called **methods** of print. They work as stand-alone functions, but also can be called within print automatically with `UseMethod()`:
+
+You can check all the methods for a generic function by calling methods:
+
+```{r}
+methods(print)
+```
+
+**S3 is this system of generic functions, methods, and class-based dispatch**
+
+Generic Functions include:
+
+```{r}
+summary
+head
+```
+
+Other generic functions call `.primitive` rather than `UseMethod()`:
+
+```{r}
+# +
+# - 
+```
+
+We can use S3 to format the slot output by giving the output its own class. To do this efficiently we need to know how `UseMethod()` selects a method function to use.
+
+#### Method Dispatch
+
+Every S3 method has a two-part name. First the function then the method, separated by a period:
+
+```{r}
+print.function
+summary.matrix
+```
+
+S3 searches for R functions simply using their name. Test it out with `one_play()`. Start by giving `one_play()` a class of its own;
+
+```{r}
+one_play <- play()
+class(one_play) <- "slots"
+```
+
+Then create an S3 print method for the `slots` class. It just needs to have the correct name, and take the same arguments as print:
+
+```{r}
+args(print)
+```
+
+Notice the only required argument for `print()` is `x`.
+
+```{r}
+print.slots <- function(x) {
+  cat("I'm using the print.slots method")
+}
+print.slots()
+```
+
+Check if it works on `one_play()`:
+
+```{r}
+print(one_play)
+print.slots(one_play)
+```
+
+Notice also that print automatically uses `.slots` to display `one_display()`:
+
+```{r}
+one_play
+attributes(one_play)
+```
+
+We can write a better function, so remove this one:
+
+```{r}
+rm(print.slots)
+```
+
+Some objects have multiple classes:
+
+```{r}
+now <- Sys.time()
+now
+attributes(now)
+```
+
+`UseMethod()` will look for a method that matches the first class, if it can't find one, it will look for a match with the second. If you give `print()` an object whose class or classes don't have a print method `UseMethod()` will call `print.default`:
+
+```{r}
+one_play
+print(one_play)
+```
+
+Write a new `print.` method for the `slots` class. The method should call `slot_display()` to return a well-formatted slot-machine output:
+
+```{r}
+print.slots <- function(x) {
+  slot_display(x)
+}
+print.slots(one_play)
+```
+
+Because `one_play()` now has class `slots'` and a `print.slots` method exists, R will now automatically use `slot_display()` to display objects of class `slots`. We still have to make sure that every slot machine output has the `slots` class. Modify the `play()` function so it assigns `slots` to the class attribute of its output:
+
+```{r}
+play <- function() {
+  symbols <- get_symbols()
+  structure(score(symbols), symbols = symbols, class = "slots")
+}
+```
+
+Now each slot machine play will have class `slots`:
+
+```{r}
+attributes(play())
+```
+
+So R will display them in the correct format:
+
+```{r}
+play()
+```
+
+#### Classes
+
+You can use the S3 system to create a robust new class of objects in R:
+
+  1. Choose a name for your class
+  2. Assign each instance of your class a 'class' attribute
+  3. Write class methods for any generic function likely to use your object
+
+Bear in mind classes can have many associated methods:
+
+```{r}
+methods(class = "factor")
+```
+
+A well-behaved class requires you to write a class method for every basic R operation.
+
+Consider two challenges:
+
+  1. R drops attributes when objects are combined into a vector
+  
+```{r}
+play1 <- play()
+play1
+play2 <- play()
+play2
+c(play1, play2)
+```
+  
+R stops using `print.slots()` to display the vector because the vector no longer has the `slots` class attribute.
+
+  2. will also drop attributes of an object (like class) when you subset the object:
+  
+```{r}
+play1[1]
+```
+  
+You can avoid this by writing `c.slots` and `[.slots` methods, but difficulties quickly accrue.
+
+In our case, it is handy to let `slots` objects revert to `prize` values when we combine groups of them together.
+
+Summary:
+
+  + R's S3 system lets you store information in R and create unique behavior
+  + It's R's version of object-oriented programming (OOP)
+  + The system is implemented by **generic functions**, which examine the class attribute of their input and call a class-specific method to generate output.
+  + Knowledge of S3 is more helpful as computer science, rather than data science. 
+  + But it can help you trouble shoot your data science tasks.
+  
+**Congrats, you have finished Chapter 8!**
+
+
+
+
+
+
+
+
+
+
+
+## Chapter 9: Loops
+
+In this chapter we will cover:
+  - Expected Values
+  - expand.grid
+  - for Loops
+  - while Loops
+  - repeat Loops
+  
+We will adapt the `score()` function to identify the slot machine payout rate# which will be equal to the **expected value** of the slot machine's prize.
+
+The expected value is the sum of each possible outcome, weighted by the probability of each outcome. Think of it like the average prize value if you played the slot machine an infinite number of times.
+
+Let's use the expected value formula to calculate some expected values, then apply it to the slot machine.
+
+The expected value is just the *sum of each value multiplied by each value's probability*. If your die is fair, each outcome will occur with the same probability (1/6):
+
+```{r}
+die <- c(1, 2, 3, 4, 5, 6)
+p <- c(1/6, 1/6, 1/6, 1/6, 1/6, 1/6)
+E_die <- sum(die*p)
+E_die 
+mean(die)
+```
+
+Notice, when each outcome has an equal probability, `E_die` will equal the mean value of die. But, what if each outcome was not equal?
+
+```{r}
+p <- c(1/8, 1/8, 1/8, 1/8, 1/8, 3/8)
+E_die <- sum(die*p)
+E_die 
+```
+
+Notice the expected value no longer equals the mean value of the die.
+
+There are three steps to this process:
+  1. List out all the possible outcomes
+  2. Determine the *value* of each outcome
+  3. Calculate that probability each out occurred
+  
+The expected value is then just the sum of 2. multiplied by the probabilities in 3. You can use this even in more complex problems.
+
+#### expand.grid
+
+Let's use the `expand.grid()` R function to write out every combination of the elements in *n* vectors
+
+  1. List all possible outcomes
+  
+```{r}
+rolls <- expand.grid(die, die)
+```
+  
+Rolls now includes all 36 combinations of two copies of die. You can do this for more than 2 combinations.
+
+```{r}
+expand.grid(die, die, die)
+```
+  2. Determine the *value* of each outcome. Create a new column called value which is the sum of the first two columns.
+  
+```{r}
+rolls$value <- rolls$Var1 + rolls$Var2
+head(rolls, 3)
+```
+  3. Get the probability of each outcome
+  
+"The probability that *n* independent, random events all occur is equal to the product of the probabilities that each random event occurs"
+
+OR
+
+`P(A & B & C & ...) P(A) * P(B) * P(C) ...`
+
+`E.g. P (1 & 1) = P(1) * P(1) = 1/8 * 1/8  = 1/64`
+
+ - Create a lookup table of probabilities for each die:
+ 
+```{r}
+prob <- c("1" = 1/8, "2" = 1/8, "3" = 1/8, "4" = 1/8, "5" = 1/8, "6" = 3/8)
+prob
+```
+ 
+If you subset this `prob` vector by `rolls$Var1`, you will get a vector of probabilities keyed to the values of `Var1`:
+
+```{r}
+prob[rolls$Var1]
+```
+
+ - now we can assign it to the `rolls` dataframe:
+ 
+```{r}
+rolls$prob1 <- prob[rolls$Var1]
+head(rolls, 3)
+```
+And repeat for `Var2`:
+
+```{r}
+rolls$prob2 <- prob[rolls$Var2]
+head(rolls, 3)
+```
+ - Now we can calculate the probability of rolling each combination by `prob1 * prob2`:
+ 
+```{r}
+rolls$prob <- rolls$prob1 * rolls$prob2
+head(rolls, 3)
+```
+
+We now have 1) each outcome, 2) the value of each outcome, and 3) the probability of each outcome, so we can compute the expected value:
+
+```{r}
+sum(rolls$value * rolls$prob)
+```
+
+Now let's apply it to the slot machine game:
+
+  1. List out all combinations of the 3 slot machine symbols
+  2. Calculate the probability of getting each combination when you play
+  3. Determine the prize you would get for each combination
+  
+Finally, compute the expected value from all combinations of prizes and probabilities.
+
+1. Use `expand.grid()` to make a dataframe that contains every possible combination of 3 symbols from the `wheel` vector:
+
+```{r}
+wheel <- c("DD", "7", "BBB", "BB", "B", "C", "0") 
+```
+
+Remember: set the argument `stringsAsFactors = F` in your `expand.grid` call:
+
+```{r}
+combos <- expand.grid(wheel, wheel, wheel, stringsAsFactors = F)
+head(combos, 3)
+```
+
+You need to run it three times for each combination of 3 symbols. Now create a look-up table to match each symbol to a probability
+
+```{r}
+prob <- c("DD" = 0.03, "7" = 0.03, "BBB" = 0.06, "BB" = 0.1, "B" = 0.25, "C" = 0.01, "0" = 0.52)
+```
+
+And add probs to the dataframe:
+
+```{r}
+combos$prob1 <- prob[combos$Var1]
+combos$prob2 <- prob[combos$Var2]
+combos$prob3 <- prob[combos$Var3]
+head(combos, 3)
+```
+2. How to compute the total probability of each combination? Our 3 slot symbols are all chosen independently, so the same rule applies:
+
+`P(A & B & C & ...) = P(A) * P(B) * P(C) * ...`
+
+
+```{r}
+combos$prob <- combos$prob1 * combos$prob2 * combos$prob3
+head(combos, 3)
+```
+
+You can check your work by summing prob (it should equal 1):
+```{r}
+sum(combos$prob) 
+```
+
+Meaning, you have to get one of these possible combinations every time you play the slot machine.
+
+3. The last thing we need to do is determine a score for each combination (all 343 of them). Let's reload the score code (we will need this later).
+
+#### for Loops
+
+A `forLoop` repeats a chunk of code many times, once for each element in a set of input. It says "Do this for every value of that" in R syntax it looks like:
+
+`for (value in that) {`
+ ` this`
+`}`
+
+The "that" object should be a set of objects (often a vector of numbers of character strings). Example:
+
+```{r}
+for (value in c("My", "first", "for", "loop")) {
+  print("one run")
+}
+```
+
+The for loop will create an object named `value` and assign it a new value on each run of the loop (here, moving along the vector in "that"). Confirm this for yourself:
+
+```{r}
+for (value in c("My", "second", "for", "loop")) {
+  print(value)
+}
+```
+  
+If you look at value you'll see it contains the value of the last element in the set:
+
+```{r}
+value
+```
+
+And you don't need to use 'value', you can use any symbol as long as it appears before the parentheses in 'that'
+
+```{r}
+for (word in c("My", "first", "for", "loop")) {
+  print(word)
+}
+```
+
+3 important notes:
+
+  1. R will run your loop in whichever environment you call it from, so it can overwrite existing objects
+
+  2. In other programming languages, for loops are designed to work with integers, not sets, but R executes the for loop on the members of a set (which may or may not be sequences of integers, for example, the set of 4 character strings in the last code chunk).
+
+  3. R loops do not return output! (What happens in the for loop, stays in the for loop). You have to write your own code within the for loop to save the for loop output
+
+To save output, create an empty vector or list before you run the for loop, that you can access after it has run:
+
+
+```{r}
+chars <- vector(length = 4)
+words <- c("My", "fourth", "for", "loop")
+
+for (i in 1:4) {
+  chars[i] <- words[i]
+}
+chars
+```
+
+Notice how here the for loop is executed on a set of integers which are used to index values in words[i... n]
+
+You'll find in practice that you use for loops, less to run code, and more to fill up vectors and lists with results of code.
+
+Let's apply a for loop to prize. First, create an empty column in combos to store the output of the for loop:
+
+```{r}
+combos$prize <- NA
+```
+
+Now write code to run score on all 343 rows of combos:
+
+```{r}
+for (i in 1:nrow(combos)) {
+  symbols <- as.character(unname(combos[i, 1:3]))
+  combos$prize[i] <- score(symbols)
+}
+```
+
+There are a few different ways of doing this, the key part is to index from 1:343 with "that":
+
+```{r}
+head(combos, 10)
+```
+
+Now we can compute the expected value:
+
+```{r}
+sum(combos$prob * combos$prize)
+```
+
+It's a low payout rate - but we haven't yet added the wild card effects of DD. DD can count as any other symbol, so long as it increases your prize, and it also doubles your prize (for each DD you have)!
+
+We can re-write the score code to include the wild card effects:
+
+```{r}
+score <- function(symbols) {
+  
+  diamonds <- sum(symbols == "DD")
+  cherries <- sum(symbols == "C")
+  
+  # identify case
+  # since diamonds are wild, only nondiamonds
+  # matter for three of a kind (same) and all bars (bars)
+  slots <- symbols[symbols != "DD"]
+  same <- length(unique(slots)) == 1
+  bars <- slots %in% c("B", "BB", "BBB")
+  
+  # assign prize
+  if (diamonds == 3) {
+    prize <- 100
+  } else if (same) {
+    payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+                  "B" = 10, "C" = 10, "0" = 0)
+    prize <- unname(payouts[slots[1]])
+  } else if (all(bars)) {
+    prize <- 5
+  } else if (cherries > 0) {
+    # diamonds count as cherries
+    # so long as there is one real cherry
+    prize <- c(0, 2, 5)[cherries + diamonds + 1]
+  } else {
+    prize <- 0
+  }
+  
+  # adjust prize for diamonds
+  prize * 2 ^ diamonds
+}
+```
+
+Now update `combos$prize`:
+
+```{r}
+for (i in 1:nrow(combos)) {
+  symbols <- as.character(unname(combos[i, 1:3]))
+  combos$prize[i] <- score(symbols)
+}
+head(combos, 10)
+```
+
+Now we can recompute the expected value:
+
+```{r}
+sum(combos$prob * combos$prize)
+```
+
+Now the payout matches the manufacturer's claim.
+
+R has to companions to the for loop: 
+
+#### while Loops
+
+while loops run a code chunk while the condition is TRUE:
+
+```{r}
+# while (condition) {
+#   code
+# }
+```
+
+Typically the code will eventually change the condition to be `FALSE`, to the end the loop. If it doesn't, you can end the while loop with Escape, or clicking on the stop icon in RStudio.
+
+While loops are much less common in R. You could however use them to compute how long it takes to go broke playing slots.
+
+```{r}
+plays_til_broke <- function(start_with) {
+  cash <- start_with
+  n <- 0
+  while (cash > 0) {
+    cash <- cash - 1 + play()
+    n <- n + 1
+  }
+  n
+}
+```
+
+```{r}
+plays_til_broke(10)
+```
+
+#### repeat Loops
+
+Repeat loops are even more basic than while loops. They will repeat a chunk of code until you tell them to stop, or until they encounter the command 'break' which will stop the loop:
+
+```{r}
+plays_til_broke <- function(start_with) {
+  cash <- start_with
+  n <- 0
+  repeat { # note there is no that or condition!
+    cash <- cash - 1 + play()
+    n <- n + 1
+    if (cash <= 0) {
+      break # so the break has to be introduced within its own conditional if statement
+    }
+  }
+  n
+}
+```
+
+**Summary** You can repeat tasks in R using for, while and repeat loops. For will run a chunk of code once for each object. If you want to save the output, you can assign it to an object that exists outside the for loop.
+
+Unfortunately, R's for loops get a bad rap because they can be slower than other languages. This is not entirely deserved, but speed is important to data analysis. The last chapter will teach how to write fast for loops and fast code in general, which is called **Vectorized Code**, a style of lightning-fast code that takes advantages of all of R's strengths!
+
+$~$
+
+  
+  
+## Chapter 10: Speed
+
+In this chapter we will cover:
+
+  1. Vectorized Code
+  2. How to Write Vectorized Code
+  3. How to Write Fast for Loops in R
+  4. Vectorized Code in Practice
+      + Loops Versus Vectorized Code
+      
+#### Vectorized Code
+
+Fast code will normally take advantage of:
+
+  1. Logical tests
+  2. Subsetting
+  3. Element-wise execution
+  
+When code does these things, it is *vectorized*.
+
+Consider an non-vectorized example that takes a vector and returns the absolute (positive) values:
+
+```{r}
+abs_loop <- function(vec){
+  for (i in 1:length(vec)) {
+    if (vec[i] < 0) {
+      vec[i] <- -vec[i]
+    }
+  }
+  vec
+}
+```
+
+Alternatively, consider a vectorized version using a logical subsetting method to manipulate every negative number at the samet time:
+
+```{r}
+abs_set <- function(vec){
+  negs <- vec < 0
+  vec[negs] <- vec[negs] * -1
+  vec
+}
+```
+
+Test them out:
+
+```{r}
+abs_loop(c(seq(-20,20,1)))
+```
+
+```{r}
+abs_set(c(seq(-20,20,1)))
+```
+
+You can compare the time it took to run each function using `system.time`. First, create a long vector:
+
+```{r}
+long <- rep(c(-1, 1), 5000000)
+```
+
+Now use `system.time` to measure how much time it takes each function to evaluate long:
+
+```{r}
+system.time(abs_loop(long))
+system.time(abs_set(long))
+```
+
+Most of R's preexisting functions are vectorized, for example try `abs()`:
+
+```{r}
+system.time(abs(long))
+```
+
+#### How to Write Vectorized Code
+
+Writing vectorized code in R is easy because most R functions are already vectorized. Two tips:
+
+  1. Use vectorized functions to complete the sequential steps in your program
+  2. Use logical subsetting to handle parallel cases. Try to manipulate every element in a case at once.
+  
+The following code could be used to convert the slot symbols to a new set.
+
+```{r}
+change_symbols <- function(vec){
+  for (i in 1:length(vec)) {
+    if (vec[i] == "DD") {
+      vec[i] <- "joker"
+    } else if (vec[i] == "C") {
+      vec[i] <- "ace"
+    } else if (vec[i] == "7") {
+      vec[i] <- "king"
+    } else if (vec[i] == "B") {
+      vec[i] <- "queen"
+    } else if (vec[i] == "BB") {
+      vec[i] <- "jack" 
+    } else if (vec[i] == "BBB") {
+      vec[i] <- "ten"
+    } else {
+      vec[i] <- "nine"
+    }
+  }
+  vec
+}
+
+vec <- c("DD", "C", "7", "B", "BB", "BBB", "0")
+
+change_symbols(vec)
+
+many <- rep(vec, 1000000)
+
+system.time(change_symbols(many))
+```
+
+Notice, `change_symbols()` uses a for loop to sort values into seven different cases. 
+
+To vectorize `change_symbols()`, create a logical test that can identify each case:
+
+```{r}
+vec[vec == "DD"]
+
+vec[vec == "C"]
+```
+
+Write code that can change the symbols for each case:
+
+```{r}
+vec[vec == "DD"] <- "joker"
+vec[vec == "C"] <- "ace"
+vec[vec == "7"] <- "king"
+vec[vec == "B"] <- "queen"
+vec[vec == "BB"] <- "jack"
+vec[vec == "BBB"] <- "ten"
+vec[vec == "0"] <- "nine"
+``` 
+
+When you combine this into a function, you have a vectorized version of `change_symbols()` that runs much faster"
+
+```{r}
+change_vec <- function (vec) {
+  vec[vec == "DD"] <- "joker"
+  vec[vec == "C"] <- "ace"
+  vec[vec == "7"] <- "king"
+  vec[vec == "B"] <- "queen"
+  vec[vec == "BB"] <- "jack"
+  vec[vec == "BBB"] <- "ten"
+  vec[vec == "0"] <- "nine"
+
+  vec
+}
+```
+
+Test it:
+
+```{r}
+system.time(change_vec(many))
+```
+
+Or, even better, use a lookup table. Look up tables are vectorized becasue they rely on R's vectorized seletion operations:
+
+```{r}
+change_vec2 <- function(vec) {
+  tb <- c("DD" = "joker", "C" = "ace", "7" = "king", "B" = "queen", "BB" = "jack",
+          "BBB" == "ten", "0" == "nine")
+  unname(tb[vec])
+}
+```
+
+Test it:
+
+```{r}
+system.time(change_vec2(many))
+```
+
+Fun fact: the reason R for loops run slowly is because you do not compile R code (unlike in C and Fortran)
+
+Tip: You can often spot a potential for vectorized code with a combination of `for` and `if`
+
+#### How to Write Fast For Loops in R
+
+Two tips for faster for loops:
+
+  1. Do as much as you can outside the for loop
+  2. Make sure the storage objects you use within the loop are large enough to contain **all** the values
+  
+This first example preassignes enough NAs to the output object and runs quickly:
+  
+```{r}
+system.time({
+  output <- rep(NA, 1000000)
+  for (i in 1:1000000) {
+    output[i] <- i + 1
+  }
+})
+```
+  
+However, this example assigned `output` to length 0 and takes much longer to run:
+  
+```{r}
+system.time({
+  output <- NA
+  for (i in 1:1000000) {
+    output[i] <- i + 1
+  }
+})
+```
+
+#### Vectorized Code in Practice
+
+In Chapter 9, you estimated the slot machine payout rate using a mathematical formula. However, you can also approximate the payout rate empirically (via observation of outcomes) by playing the slot machine many many times. (An infinite number would be impossible)
+
+You could use a for loop:
+
+```{r}
+winnings <- vector(length = 1000000)
+for (i in 1:1000000) {
+  winnings[i] <- play()
+}
+
+mean(winnings)
+```
+
+Notice the payout rate is very close to the true payout rate computed earlier.
+
+Check how long this code took to run:
+
+```{r}
+system.time(for (i in 1:1000000) {
+  winnings[i] <- play()
+})
+```
+
+Pretty slow! This took 17 seconds on my computer. That's because the current `score()` function is not vectorized.
+
+Remember that the `score()` function uses a combination of for loops and if statements, indicating it can probably be vectorized.
+
+You could rewrite `get_symbols()` to generate *n* slot combinations and return them as a *n* x 3 matrix:
+
+```{r}
+get_many_symbols <- function(n) {
+  wheel <- c("DD", "7", "BBB", "BB", "B", "C", "0")
+  vec <- sample(wheel, size = 3 * n, replace = T,
+                prob = c(0.03, 0.03, 0.06, 0.1, 0.25, 0.01, 0.52))
+  matrix(vec, ncol = 3)
+}
+
+get_many_symbols(5)
+```
+
+You could also rewrite `play()` to take a parameter `n`, and return `n` prizes, in a data frame:
+
+```{r}
+play_many <- function(n) {
+  symb_mat <- get_many_symbols(n = n)
+  data.frame(w1 = symb_mat[, 1], w2 = symb_mat[, 2], w3 = symb_mat[, 3],
+             prize = score_many(symb_mat))
+}
+```
+
+This new function makes it easy to simulate a million, or even 10 million, plays of the slot machine. We just need to write the `score_many()` function, which needs to be a vectorized version of `score()` that takes an *n* x 3 matrix and returns *n* prizes.
+
+First, create a concrete example of 6 slot machine plays:
+
+```{r}
+symbols <- matrix(
+  c("DD", "DD", "DD",
+  "BB", "DD", "BB",
+  "0", "0", "0",
+  "B", "BB", "BBB",
+  "C", "C", "0",
+  "7", "DD", "DD"), nrow = 6, byrow = T)
+
+symbols
+```
+
+Then look at the non-vectorized `score` function:
+
+```{r}
+score
+```
+
+Now try to write a vectorized version:
+
+```{r}
+score_many <- function(symbols) {
+  
+  # get location of diamonds,  cherries, and slots (not diamonds)
+  diamonds <- symbols == "DD"
+  cherries <- symbols == "C"
+  
+  # since diamonds are wild, only non-diamonds matter for three of a kind (same) and all bars (bars)
+  # get rows of all same, and all bars
+  same <- symbols[, 1] == symbols[, 2] & symbols[, 1] == symbols[, 3] & symbols != "DD"
+  all_bars <- rowSums(symbols[, 1] %in% c("B", "BB", "BBB") & symbols[, 2] %in% c("B", "BB", "BBB") & symbols[, 3] %in% c("B", "BB", "BBB") & !same) == 3
+  bars <- symbols == "B" | symbols == "BB" | symbols == "BBB"
+  
+  # assign payouts
+  payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,
+                  "B" = 10, "C" = 10, "0" = 0)
+ 
+  # assign prizes
+  # all diamonds
+  prize <- vector(length = nrow(symbols))
+  prize[rowSums(diamonds) == 3] <- 100
+  
+  # all same (not diamonds)
+  prize[rowSums(same) == 3] <- unname(payouts[unique(symbols[same])])
+  
+  # all bars (but not all same bar)
+  prize[all_bars] <- 5
+  
+  # sum cherries and diamonds, but only for rows with at least one cherry
+  all_diamonds <- rowSums(diamonds) == 3
+  two_diamonds_nocherry <- rowSums(diamonds) == 2 & rowSums(cherries) == 0
+  one_diamond_nocherry <- rowSums(diamonds) == 1 & rowSums(cherries) == 0
+  prize <- prize + c(0, 2, 5)[rowSums(cherries) + rowSums(diamonds) - 3*all_diamonds - 2*two_diamonds_nocherry - one_diamond_nocherry + 1]
+
+  # adjust for wild (diamonds)
+  two_wilds <- rowSums(diamonds) == 2
+  
+  # identify the non-wild symbol
+  one <- two_wilds & symbols[, 1] != symbols[, 2] & symbols[, 2] == symbols[, 3]
+  two <- two_wilds & symbols[, 1] != symbols[, 2] & symbols[, 1] == symbols[, 3]
+  three <- two_wilds & symbols[, 1] != symbols[, 3] & symbols[, 1] == symbols[, 2]
+  
+  # treat as three of a kind
+  prize[one] <- payouts[symbols[one, 1]]
+  prize[two] <- payouts[symbols[two, 2]]
+  prize[three] <- payouts[symbols[three, 3]]
+  
+  # combos with one wild
+  one_wild <- rowSums(diamonds) == 1
+  
+  # treat as all bars (if applicable)
+  wild_bars <- one_wild & (rowSums(bars) == 2)
+  prize[wild_bars] <- 5
+  
+  # treat as 3 of a kind (if applicable) note, one, two, and three don't match the location of the wildcard, they just correpond to three possible outcomes
+  one <- one_wild & symbols[, 1] == symbols[, 2]
+  two <- one_wild & symbols[, 2] == symbols[, 3]
+  three <- one_wild & symbols[, 3] == symbols[, 1]
+  prize[one] <- payouts[symbols[one, 1]]
+  prize[two] <- payouts[symbols[two, 2]]
+  prize[three] <- payouts[symbols[three, 3]]
+  
+  # adjust for diamonds
+  unname(prize * 2 ^ rowSums(diamonds))
+  
+}
+
+score_many(get_many_symbols(100))
+```
+
+Now try with `play_many`
+
+```{r}
+play_many(100)
+```
+
+Check the computation time:
+
+```{r}
+system.time(play_many(10000000))
+```
+
+*I attempted this myself, and there seems to be an error causing three zeros to return '10' as a prize.* The textbook solution is pasted here:
+
+```{r}
+# symbols should be a matrix with a column for each slot machine window
+score_many <- function(symbols) {
+
+  # Step 1: Assign base prize based on cherries and diamonds ---------
+  ## Count the number of cherries and diamonds in each combination
+  cherries <- rowSums(symbols == "C")
+  diamonds <- rowSums(symbols == "DD") 
+  
+  ## Wild diamonds count as cherries
+  prize <- c(0, 2, 5)[cherries + diamonds + 1]
+  
+  ## ...but not if there are zero real cherries 
+  ### (cherries is coerced to FALSE where cherries == 0)
+  prize[!cherries] <- 0
+  
+  # Step 2: Change prize for combinations that contain three of a kind 
+  same <- symbols[, 1] == symbols[, 2] & 
+    symbols[, 2] == symbols[, 3]
+  payoffs <- c("DD" = 100, "7" = 80, "BBB" = 40, 
+    "BB" = 25, "B" = 10, "C" = 10, "0" = 0)
+  prize[same] <- payoffs[symbols[same, 1]]
+  
+  # Step 3: Change prize for combinations that contain all bars ------
+  bars <- symbols == "B" | symbols ==  "BB" | symbols == "BBB"
+  all_bars <- bars[, 1] & bars[, 2] & bars[, 3] & !same
+  prize[all_bars] <- 5
+  
+  # Step 4: Handle wilds ---------------------------------------------
+  
+  ## combos with two diamonds
+  two_wilds <- diamonds == 2
+
+  ### Identify the nonwild symbol
+  one <- two_wilds & symbols[, 1] != symbols[, 2] & 
+    symbols[, 2] == symbols[, 3]
+  two <- two_wilds & symbols[, 1] != symbols[, 2] & 
+    symbols[, 1] == symbols[, 3]
+  three <- two_wilds & symbols[, 1] == symbols[, 2] & 
+    symbols[, 2] != symbols[, 3]
+  
+  ### Treat as three of a kind
+  prize[one] <- payoffs[symbols[one, 1]]
+  prize[two] <- payoffs[symbols[two, 2]]
+  prize[three] <- payoffs[symbols[three, 3]]
+  
+  ## combos with one wild
+  one_wild <- diamonds == 1
+  
+  ### Treat as all bars (if appropriate)
+  wild_bars <- one_wild & (rowSums(bars) == 2)
+  prize[wild_bars] <- 5
+  
+  ### Treat as three of a kind (if appropriate)
+  one <- one_wild & symbols[, 1] == symbols[, 2]
+  two <- one_wild & symbols[, 2] == symbols[, 3]
+  three <- one_wild & symbols[, 3] == symbols[, 1]
+  prize[one] <- payoffs[symbols[one, 1]]
+  prize[two] <- payoffs[symbols[two, 2]]
+  prize[three] <- payoffs[symbols[three, 3]]
+ 
+  # Step 5: Double prize for every diamond in combo ------------------
+  unname(prize * 2^diamonds)
+  
+}
+```
+
+You should now be familiar with:
+
+  1. Vectorized Code
+  2. How to Write Vectorized Code
+  3. How to Write Fast for Loops in R
+  4. Vectorized Code in Practice
+      + Loops Versus Vectorized Code
+
+**Congrats, you've finished chapter 10!**
