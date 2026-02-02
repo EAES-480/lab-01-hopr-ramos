@@ -13,8 +13,8 @@ Fill in the chunk below. The autograder will check that these objects exist and 
 
 ```{r checkpoints, include=TRUE}
 # REQUIRED: put your info here
-student_name <- ""   # e.g., "Jane Doe"
-student_netid <- ""  # e.g., "jdoe23"
+student_name <- "Santiago Ismael Ramos Galarza"   # e.g., "Jane Doe"
+student_netid <- "sramo40"  # e.g., "jdoe23"
 
 # REQUIRED: confirm you completed Chapters 1–8 of HOPR in this file
 # Put the chapter numbers you completed (should be 1:8 when finished).
@@ -71,60 +71,61 @@ In this chapter we will cover:
 You can assign an object a name and a value as follows
 
 ```{r}
-
+test <- 1
 ```
 
 ```{r}
-
+rmd <- 2
 ```
 
 R also understands capitalization in object names:
 
 ```{r}
-
+Rmd <- 2:10
 ```
 
 R overwrites previous information without asking permission:
 
 ```{r}
-
+rmd <- 222
 ```
 
 Look at all the objects you have created using `ls()`:
 ```{r}
-
+ls()
 ```
 
 You can clear all your work space objects using (remove the # first)
 
 ```{r}
-
+rm(test)
 ```
 
 
 You can do all sorts of math with die (a sequence of numeric integers)
 
 ```{r}
-
+die <- 1:6
 ```
 
 When you multiply two vectors of unequal length, R will repeat the shorter vector to match the long vector (known as 'vector recycling')
 
 ```{r}
-
+die + 2:6
 ```
 
 
 But it will produce an error when the longer objeect is not a multiple of the shorter object
 
 ```{r}
-
+die - 10:13
 ```
 
 You can also do matrix multiplication
 
 ```{r}
-
+die %*% die
+die %o% Rmd
 ```
 
 ### Functions
@@ -132,7 +133,8 @@ You can also do matrix multiplication
 To use a function, just write the name of the function and then the data you want to operate on in the parentheses:
 
 ```{r}
-
+round(1.98263)
+factorial(5)
 ```
 
 The data you pass the function is called the function's **argument**. The argument can be:
@@ -307,13 +309,19 @@ If you are working in the script window of RStudio you can create a function fro
 Test it out with the three lines of code from the body of code in our `roll()` function:
 
 ```{r}
-
+die <- 1:6
+dice <- sample(die, size = 2, replace = TRUE)
+sum(dice)
 ```
 
 After you've done it, your code should update to look like this:
 
 ```{r}
-
+roll <- function() {
+  die <- 1:6
+  dice <- sample(die, size = 2, replace = TRUE)
+  sum(dice)
+}
 ```
 
 You should now have a familiarity with:
@@ -347,39 +355,46 @@ We will try using the `qplot` function which comes from the *ggplot2* package, a
 First, install the package with the following function:
 
 ```{r}
-
+install.packages("ggplot2")
 ```
 
 `qplot` won't work without loading it:
 
 ```{r}
+#qplot
 
 ```
 
 To load an installed package use:
 
 ```{r}
-
+library("ggplot2")
 ```
 
 And look at `qplot`:
 
 ```{r}
-
+qplot
 ```
 
 `qplot` makes "quick plots". Let's test it out by defining some x and y values:
 
 ```{r}
-
+x <- c(1:20)
+y <- 1/x
+qplot(x,y)
 ```
 
 ```{r}
-
+x <- c(1:20)
+y <- sin(x)
+qplot(x,y)
 ```
 
 ```{r}
-
+x <- c(1:20)
+y <- log(x)
+qplot(x,y)
 ```
 
 Notice how R matches the order of values in the vector `x` with the order of values in vector `y`? 
@@ -389,7 +404,8 @@ This is known as *element-wise execution*.
 We can also make a histogram by just providing one vector of values:
 
 ```{r}
-
+x <- c(2,2,2,3,3,4,5,1,7,8)
+qplot(x, binwidth = 1)
 ```
 
 The notation for describing this histogram intervals looks like: `[1, 2)`
@@ -401,13 +417,15 @@ For example, in the histogram above, there are three values in the interval `[2,
 Let's try another example:
 
 ```{r}
-
+x <- c(1,23,23,23,23,25,18,27,18)
+qplot(x, binwidth = 1)
 ```
 
 And another:
 
 ```{r}
-
+x <- c(0, 1, 1, 2, 2, 2, 3, 3, 4)
+qplot(x, binwidth = 1)
 ```
 
 You can use a histogram to display visually how common different values of `x` are.
@@ -415,17 +433,18 @@ You can use a histogram to display visually how common different values of `x` a
 Let's try visualizing many the *replicated* output of `roll()` (many dice rolls):
 
 ```{r}
-
+replicate(10, roll())
 ```
 
 ```{r}
-
+replicate(10, roll())
 ```
 
 To get a better sense of the long term  pattern, let's replicate it 10,000 times:
 
 ```{r}
-
+test1 <- replicate(10000, roll())
+qplot(test1, binwidth = 1)
 ```
 
 The histogram shows that the dice behaves predictably when replicated many times. The more likely values occur more frequently (e.g., 6, 7, and 8)
@@ -436,7 +455,7 @@ The histogram shows that the dice behaves predictably when replicated many times
 Use a question mark `?` before a function name to open the help page:
 
 ```{r}
-
+?sin()
 ```
 
 The help page has several sections:
@@ -452,13 +471,13 @@ The help page has several sections:
 You can also search by keyword if you forget a function name:"
 
 ```{r}
-
+??cosine
 ```
 
 Let's look at the `sample` help page:
 
 ```{r}
-
+?sample
 ```
 
 You'll have to copy and paste `?sample` into your RStudio console window, or run it from the script window.
@@ -473,13 +492,19 @@ And Details has more information:
 Re-write the `roll` function to roll a pair of weighted dice:
 
 ```{r}
-
+roll <- function() {
+  die <- 1:6
+  dice <- sample(die, size = 2, replace = TRUE, 
+    prob = c(5/8, 1/8, 1/8, 1/8, 1/8, 1/8))
+  sum(dice)
+}
 ```
 
 Rerun the code chunk above, and then visualize the long term behavior of your dice:
 
 ```{r}
-
+test2 <- replicate(100, roll())
+qplot(test2, binwidth = 1)
 ```
 
 Notice that after changing the `prob` vector to make 6 more common, the distribution of dice roll outcomes is now skewed.
@@ -526,13 +551,13 @@ In this chapter we will cover:
 Create an atomic vector by grouping values with c (concatenate)
 
 ```{r}
-
+die <- c(1, 2, 3, 4, 5, 6)
 ```
 
 Vectors can be of just one value
 
 ```{r}
-
+is.vector(die)
 ```
 
 There are 6 types of atomic vectors in R:
@@ -540,14 +565,16 @@ There are 6 types of atomic vectors in R:
  1. *Doubles* are the default for numbers and are the computer science term for numerics:
 
 ```{r}
-
+test3 <- c(-1,3,5,6,1,5,7,0.1)
+typeof(test3)
 ```
 
 
  2. *Integers* store numbers without decimal points. Adding an L after a numeric value creates an integer:
  
 ```{r}
-
+int <- c(-20L, 4L, 1L)
+typeof(int)
 ```
 
 By default, integer numbers saved without the L will be saved as double.
@@ -557,43 +584,50 @@ Double values are accurate to about 16 significant digits. This rounding is norm
  3. *Character vectors* store small pieces of text:
  
 ```{r}
-
+text <- c("one", "two")
+typeof(text)
 ```
 
 The individual elements of a character vector are known as strings. Can you tell the difference between a character string and a number?
 
 ```{r}
-
+typeof("1")
+typeof(1)
 ```
 
 Be careful, you can confuse R objects with strings, for example:
 
 ```{r}
-
+typeof(x)
+typeof("x")
 ```
 
  4. *Logicals* are TRUE, FALSE, T, and F are R's version of logical (Boolean) data:
  
 ```{r}
-
+logic <- c(TRUE, FALSE)
+typeof(logic)
 ```
  
  5. *Complex*. It is unlikely you will ever use these last two vector types but... for a complex vector, add an imaginary term to a number, with i:
  
 ```{r}
-
+comp <- c(1+2i, 5i)
+typeof(comp)
 ```
  
  6. *Raw* vectors store raw bytes of data. A simple empty raw vector of length n can be made with:
  
 ```{r}
+typeof(raw(40))
 
 ```
 
 **Exercise**: What sort of vector will you use to store the face names of cards in a royal flush? ( i.e. "ace", "king", "queen", "jack", "ten )
 
 ```{r}
-
+text <- c("ace", "king", "queen", "jack", "ten")
+typeof(text)
 ```
 
 #### Attributes
@@ -603,7 +637,7 @@ You can build a more sophisticated objects vector from an atomic vector by givin
 An *attribute* is a piece of information you can attach to atomic vectors (or any R object). Normally, R will ignore this information, unless you ask to look for it
 
 ```{r}
-
+names(die)
 ```
 
 R uses NULL to represent an empty object.
@@ -613,7 +647,7 @@ R uses NULL to represent an empty object.
 *Names*
 
 ```{r}
-
+names(die) <- c("one", "two", "three", "four", "five", "six")
 ```
 
 Now die has the names attribute.
@@ -621,45 +655,50 @@ Now die has the names attribute.
 Names will be displayed above the object when you look at it:
 
 ```{r}
-
+die
 ```
 
 
 However they won't affect the values of the vector:
 
 ```{r}
-
+die / 2
 ```
 
 To remove names, set it to NULL:
 
 ```{r}
-
+names(die) <- NULL
+die
 ```
 
 *Dimensions*
 You can transform an atomic vector into an n-dimensional array with dim:
 
 ```{r}
-
+dim(die) <- c(6,1)
+die
 ```
 
 Transform it into a (2 row x 3 column) array:
 
 ```{r}
-
+dim(die) <- c(2,3)
+die
 ```
 
 Now into a (3 row x 2 column) array:
 
 ```{r}
-
+dim(die) <- c(3,2)
+die
 ```
 
 Now into a (1 row x 2 column x 3 slice) hypercube (a 3 dimensional structure):
 
 ```{r}
-
+dim(die) <- c(1, 2, 3)
+die
 ```
 
 Two notes on dim
@@ -670,30 +709,33 @@ Two notes on dim
 *Matrices* store two-dimensional arrays. A matrix will organize your vector of values into a matrix with the specified number of rows:
 
 ```{r}
-
+matrix(c(1,2,3,4), nrow = 2)
 ```
 
 To fill by row (rather than default by column):
 
 ```{r}
-
+matrix(c(1,2,3,4), nrow = 2, byrow = TRUE)
 ```
 
 More customization is possible, remember to check the help page with:
 
 ```{r}
-
+?matrix
 ```
 
 *Arrays* create an n-dimensional array, for example a hypercube in 4, 5, or n dimensions:
 
 ```{r}
-
+array(c(11:14, 21:24, 31:34), dim = c(2, 2, 3))
 ```
 
 **Exercise**: Create a 5 x 2 matrix for a royal flush of spades. (Remember the hand object created earlier)
 
 ```{r}
+rfs <- matrix(c("ace", "king", "queen", "jack", "ten", "spades", "spades", 
+  "spades", "spades", "spades"), nrow =5)
+rfs
 
 ```
 
@@ -703,19 +745,22 @@ Notice that all three of these options for arranging the array dimensions work.
 Notice that changing `dim` doesn't change the type, but does change the class:
 
 ```{r}
-
+dim(die) <- c(2, 3)
+typeof(die)
+class(die)
 ```
 
 A class is a special case of an atomic vector. After using dim, die is now a matrix (class), a special case of a double atomic vector. The class attribute may not always appear if you run attributes:
 
 ```{r}
-
+attributes(die)
 ```
 
 Even if a class attribute is not assigned, R will return one based on the atomic vector type:
 
 ```{r}
-
+class("one")
+class(1)
 ```
 
 Setting an object's class attribute is normally a bad idea. Discussed more in Part 3 of the book!
@@ -726,13 +771,16 @@ Attributes let R represent more types of data than just doubles, integers, chara
 R uses the "POSIXct" and "POSIXt" classes for dates and times:
 
 ```{r}
+now <- Sys.time()
+now
 
+class(now)
 ```
 
 It looks like  a character string, but it's data type is actually double:
 
 ```{r}
-
+typeof(now)
 ```
 
 In POSIXct, a widely used framework, any date and time is represented by the number of seconds before or after the standard date and time:
@@ -742,19 +790,21 @@ E.g., 12:00 AM January 1st 1970 (in the Universal Time Coordinated (UTC) zone)
 Check using the unclasss function:
 
 ```{r}
-
+unclass(now)
 ```
 
 Check what day it was a million seconds after the standard date and time:
 
 ```{r}
-
+mil <- unclass(now) + 1000000
+class(mil) <- c("POSIXct", "POSIXt")
+mil
 ```
 
 And look at the class:
 
 ```{r}
-
+class(mil)
 ```
 
 This worked well, but in general forcing a class on an object is not a good idea. Classes are normally interpreted by R based upon the value type in the object.
@@ -763,19 +813,19 @@ This worked well, but in general forcing a class on an object is not a good idea
 Factors are how R stores categorical information, like eye color or ethnicity. To make a factor, pass an atomic vector to the factor function:
 
 ```{r}
-
+gender <- factor(c("male", "female", "female", "male"))
 ```
 
 Notice that R stores the factor as type integer, this is because it assigns factors levels:
 
 ```{r}
-
+typeof(gender)
 ```
 
 You can see exactly how R is storing your factor with unclass:
 
 ```{r}
-
+unclass(gender)
 ```
 
 Factors can be confusing because they look like characters but behave like integers. 
@@ -783,7 +833,7 @@ Factors can be confusing because they look like characters but behave like integ
 R will often try to convert character strings to factors when you load and create data but how to avoid this will be covered later.
 
 ```{r}
-
+as.character(gender)
 ```
 
 Congrats! You now understand all the possibilities of R's atomic vectors!
@@ -793,6 +843,7 @@ Congrats! You now understand all the possibilities of R's atomic vectors!
 Try creating an atomic vector with two value types:
 
 ```{r}
+card <- c("ace", "hearts", 1)
 
 ```
 
@@ -803,25 +854,27 @@ Notice the integer 1, is now a character string? R has *coerced* it into a chara
 If a character string is present, R coerces everything to character strings:
 
 ```{r}
-
+typeof(c("one",2 ,3, 4))
 ```
 
 If logicals and numbers, R coerces everything to numbers (T = 1, F = 0):
 
 ```{r}
-
+typeof(c(TRUE,2 ,3, 4))
 ```
 
 If you try to do math with logical values, it will count the number of TRUEs:
 
 ```{r}
-
+c(TRUE, FALSE) + c(FALSE, FALSE)
 ```
 
 To explicitly convert between data types:
 
 ```{r}
-
+as.character(1)
+as.logical(1)
+as.numeric(FALSE)
 ```
 
 #### Lists
@@ -829,31 +882,33 @@ To explicitly convert between data types:
 To completely avoid coercion, you can use lists:
 
 ```{r}
-
+list1 <- list(100:130, "R", list(TRUE, FALSE))
+list1
 ```
 
 The double bracket index tells you which element of the list is displayed:
 
 ```{r}
-
+list1[[1]]
 ```
 
 The single bracket tells you which subselement of the list is displayed:
 
 ```{r}
-
+list1[2]
 ```
 
 This distinction is important because a list object can be anything, including another list:
 
 ```{r}
-
+list1[[3]][[1]]
 ```
 
 Use a list to store a single playing card, such as the ace of hearts, worth one point:
 
 ```{r}
-
+card <- list("ace", "hearts", 1)
+card
 ```
 
 You could use lists to create a list, with 52 sublists, for all the differen cards but there is a faster way!
@@ -865,24 +920,28 @@ Data frames are the two-dimensional version of a list and by FAR the most useful
 Give the data.frame() function any number of vectors, separated by a comma. Each vector should be set equal to a name that describes the vector:
 
 ```{r}
-
+df <- data.frame(face = c("ace", "two", "six"),  
+  suit = c("clubs", "clubs", "clubs"), value = c(1, 2, 3))
 ```
 
 Note that df columns have to be of the same length. A data.frame is of special case of a list, of class "data frame":
 
 ```{r}
-
+df
 ```
 
 The `str` function shows you which and how objects are grouped together:
 
 ```{r}
-
+str(df)
 ```
 
 Notice R saved the strings as factor, you can suppress this with:
 
 ```{r}
+df <- data.frame(face = c("ace", "two", "six"),  
+  suit = c("clubs", "clubs", "clubs"), value = c(1, 2, 3),
+  stringsAsFactors = FALSE)
 
 ```
 
@@ -899,17 +958,20 @@ Go to the top-left window: Environment > Import Data > From Text File... > Selec
 Look at the top and bottom of the data frame with:
 
 ```{r}
+library(readr)
+deck <- read_csv("deck.csv")
 
+head(deck)
 ```
 
 Bbefore continuing, let's save a new copy of the deck.csv. To find out where it saved it, check the working directory.
 
 ```{r}
-
+write.csv(deck, file = "cards.csv", row.names = FALSE)
 ```
 
 ```{r}
-
+getwd()
 ```
 
 Notice, write.csv() needs three arguments: 
@@ -959,7 +1021,7 @@ In this chapter we will cover:
 To extract a value or set of values from a data frame use a pair of hard brackets:
 
 ```{r}
-
+deck[ , ]
 ```
 
 There are six ways to write an index in R, each is useful. 
@@ -976,31 +1038,33 @@ There are six ways to write an index in R, each is useful.
 `Deck[i,j]` will return the ith row and the jth column:
 
 ```{r}
-
+head(deck)
 ```
 
 Extract more than one value using a vector of positive integers:
 
 ```{r}
-
+deck[1, c(1, 2, 3)]
 ```
 
 R doesn't remove these values, it gives you a new set which you can save to a new R object:
 
 ```{r}
-
+new <- deck[1, c(1, 2, 3)]
+new
 ```
 
 You can therefore repeat values more than once, by repeating an index:
 
 ```{r}
-
+deck[c(1, 1), c(1, 2, 3)]
 ```
 
 R's notation system works for any R object, as long as you supply one index for each dimension:
 
 ```{r}
-
+vec <- c(6, 1, 3, 6, 10, 5)
+vec[1:3]
 ```
 
 R's indexing begins at 1, as in algebra, and unlike zero for many other programming langauges. This means, given an index of 1, R returns the first element of an object.
@@ -1009,25 +1073,26 @@ R's indexing begins at 1, as in algebra, and unlike zero for many other programm
  - If you would prefer the dataframe column is maintained, add drop = FALSE to the brackets
  
 ```{r}
-
+deck[1:2, 1, drop = FALSE]
 ```
  
 *Negative integers* return every element *except* the elements of a negative index. For example:
 
 ```{r}
-
+deck[-(2:10), 1:2]
 ```
 
 Returns the first row, and excludes every other row. Negative integers are therefore more efficient for removing just a few rows or columns. You can mix positive and negative integers, but *only* in different indexes (row vs. column):
 
 ```{r}
-
+#deck[c(-1, 1), 1]
+#Error in xj[i] : only 0's may be mixed with negative subscripts
 ```
 
 *Zero* returns nothing from a dimension when you use it as an index, creating an empty object:
 
 ```{r}
-
+deck[0, 0]
 ```
 
 It's not very helpful as an index!
@@ -1035,7 +1100,7 @@ It's not very helpful as an index!
 *Blank spaces* tell R to extract every value in a dimension (an entire row or column):
 
 ```{r}
-
+deck[2, ]
 ```
 
 *Logical Values*: T/TRUE values are returned if you provide a vector of same dimension as the object:
@@ -1049,7 +1114,7 @@ Using logicals may seem a little odd, but it can become a powerful tool!
 *Names* can be used to extract values based on their names in the object. Commonly used to extract particular named *columns*:
 
 ```{r}
-
+deck[1, c(TRUE, FALSE, FALSE)]
 ```
 
 
@@ -1058,24 +1123,26 @@ Using logicals may seem a little odd, but it can become a powerful tool!
 Make a function that returns the first row of a data frame. Complete the basic function syntax:
 
 ```{r}
-
+deal <- function(cards) {
+  cards[1, ]
+}
 ```
 
 Fill in the function:
 
 ```{r}
-
+deal(deck)
 ```
 
 Try it out
 ```{r}
-
+deal(deck)
 ```
 
 Notice that it always deals the same (top) card:
 
 ```{r}
-
+deal(deck)
 ```
 
 This is a difficult problem to solve, so we will come back to it in Chapter 6.
@@ -1085,37 +1152,49 @@ For now, you can just shuffle the deck after every deal. This is not a perfect s
 Start by extracting every row in your data frame:
 
 ```{r}
-
+deck2 <- deck[1:52, ]
+head(deck2)
 ```
 
 The order is replicated exactly:
 
 ```{r}
-
+deck2 <- deck[1:52, ]
+head(deck2)
 ```
 
 Alternatively, you can manually rearrange some of the rows:
 
 ```{r}
+deck3 <- deck[c(2, 1, 3:52), ]
 
+head(deck3)
 ```
 
 However, to randomized the order, you need to sort the integers (row numbers) into a random order. Then use the results as a row index. Use the `sample()` function for this:
 
 ```{r}
-
+random <- sample(1:52, size = 52)
+random
+deck4 <- deck[random, ]
+head(deck4)
 ```
 
 Now the deck is truly shuffled! Combine with the deal function to create a shuffle function:
 
 ```{r}
-
+shuffle <- function(cards) { 
+  random <- sample(1:52, size = 52)
+  cards[random, ]
+}
 ```
 
 You can now shuffle the card deck between each deal:
 
 ```{r}
-
+deal(deck)
+deck2 <- shuffle(deck) 
+deal(deck2)
 ```
 
 #### Dollar Signs and Double Brackets
@@ -1123,37 +1202,40 @@ You can now shuffle the card deck between each deal:
 You can also select a column from a data frame using the $:
 
 ```{r}
-
+deck$value
 ```
 
 Notice it will provide options to select from when you add $ to the data frame. This is very handy for computing means or other statistics:
 
 ```{r}
-
+mean(deck$value)
+max(deck$value)
 ```
 
 $ can also be used to subset lists in efficient ways. First, confirm that subsetting a list using a regular index returns a list:
 
 ```{r}
-
+lst <- list(numbers = c(1, 2), logical = TRUE, strings = c("a", "b", "c"))
+lst
 ```
 
 Most R functions do not work with lists: (remove # sign to run)
 
 ```{r}
-
+#sum(lst[1])
+#Error in sum(lst[1]) : invalid 'type' (list) of argument
 ```
 
 Use the $ notation instead to get the values with no list structure:
 
 ```{r}
-
+lst$numbers
 ```
 
 Alternatively, if you don't have or don't want names, for your list elements, then use double hard brackets to index:
 
 ```{r}
-
+sum(lst$numbers)
 ```
 
 Summary:
@@ -1164,7 +1246,7 @@ Summary:
 You can combine the single or double brackets with any indexing method:
 
 ```{r}
-
+lst[[1]]
 ```
 
 You should now have a familiarity with:
@@ -1201,7 +1283,7 @@ We will use these new skills to change the point system of the deck.
 Make a copy of the deck so you can always reload the pristine version:
 
 ```{r}
-
+deck2 <- deck
 ```
 
 #### Changing Values in Place
@@ -1209,49 +1291,55 @@ Make a copy of the deck so you can always reload the pristine version:
 Start by creating a simple vector of zeros:
 
 ```{r}
-
+vec <- c(0, 0, 0, 0, 0, 0)
+vec
 ```
 
 Select the first value using hard brackets:
 
 ```{r}
-
+vec[1]
 ```
 
 Try modifying the first value with the assignment operator `<-` :
 
 ```{r}
-
+vec[1] <- 1000
+vec
 ```
 
 You can replace multiple values, as long as the number of new values ==  number of selected values:
 
 ```{r}
-
+vec[c(2, 3)] <- c(4, 5)
+vec
 ```
 
 Whereas this will not work: 
 
 ```{r}
-
+vec[c(2, 3)] <- c(4, 5, 7)
+vec
 ```
 
 You can also create new values that do not exist yet, by expanding the object:
 
 ```{r}
-
+vec[7] <- 0
+vec
 ```
 
 Try adding a new variable to your data set using `$`:
 
 ```{r}
-
+deck2$new <- 1:52
+head(deck2)
 ```
 
 Then try removing it with the symbol `NULL`:
 
 ```{r}
-
+deck2$new <- NULL
 ```
 
 Let's create a "War Deck", for which aces have the value, 14 rather than 1.
@@ -1259,32 +1347,32 @@ Let's create a "War Deck", for which aces have the value, 14 rather than 1.
 First, use R's notiation system to identify the aces:
 
 ```{r}
-
+deck2[c(13, 26, 39, 52), ]
 ```
 
 You can also single out just the value of the aces (in the 3rd column of deck2):
 
 ```{r}
-
+deck2[c(13, 26, 39, 52), 3]
 ```
 
 And do it more efficiently with a vector:
 
 ```{r}
-
+deck2$value[c(13, 26, 39, 52)]
 ```
 
 Now reassign the aces to 14:
 *Hint*: You can use a vector of 14s, or just one 14 which R will recycle to all elements.
 
 ```{r}
-
+deck2$value[c(13, 26, 39, 52)] <- 14
 ```
 
 Notice the values change "in place".
 
 ```{r}
-
+head(deck2, 13)
 ```
 
 The same technique works for vectors, matrices, arrays, lists, and data frames!
@@ -1294,7 +1382,8 @@ In this example, we knew where the aces were but if the deck was shuffled, how w
 Shuffle the deck and save it as deck3:
 
 ```{r}
-
+deck3 <- shuffle(deck)
+head(deck3)
 ```
 
 Now the aces are hard to find!
@@ -1304,7 +1393,7 @@ Now the aces are hard to find!
 Logical subsettingcan be used to return elements that match a TRUE:
 
 ```{r}
-
+vec[c(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)]
 ```
 
 However, you don't have to type out a long vector of T and F. Use a *Logical Test* using logical operators:
@@ -1319,13 +1408,17 @@ E.g.,use the operators:
  + `%in%` exists within the vector (this one is very handy!)
 
 ```{r}
-
+1 > 7
+1 >= 0
+4 < c(4,4,4,5)
+4 != c(4,4,4,5)
 ```
 
 Note: `%in%` does not use element-wise execution, it asks *are the values on the left are on the right side?*:
 
 ```{r}
-
+1 %in% c(1,2,3)
+c(1,2,3) %in% 1
 ```
 
 Remember: `=` is the same as the assignment operateor `<-` in R. Be careful to use `==` when you want to evaluate equivalence (is equal).
@@ -1334,43 +1427,46 @@ Remember: `=` is the same as the assignment operateor `<-` in R. Be careful to u
 
 First convert desk faces to characters:
 ```{r}
-
+deck2$face
 ```
 
 Now perform the *logical test*:
 
 ```{r}
-
+deck2$face == "ace"
 ```
 
 You can also count the number of TRUE (treated as 1):
 
 ```{r}
-
+sum(deck2$face == "ace")
 ```
 
 You can also use this on your shuffled `deck3`, to the same effect:
 
 ```{r}
-
+deck3$face == "ace"
 ```
 
 The logical operator now provides row *indices* to extract rows or individual elements:
 
 ```{r}
-
+deck3$value[deck3$face == "ace"]
 ```
 
 Now use the assignment as before to change the values of ace to 14:
 
 ```{r}
-
+deck3$value[deck3$face == "ace"] <- 14
+head(deck3)
 ```
 
 Check to see if aces now have value of 14:
 
 ```{r}
-
+deck4 <- deck
+deck4$value <- 0
+head(deck4, 13)
 ```
 
 They do!
@@ -1380,31 +1476,33 @@ Logical subsetting is a key component of vectorized programming, a coding style 
 Let's adapt the deck for Hearts, where every card has a value of zero, except suit of hearts, which has a value of 1.
 
 ```{r}
-
+deck4$suit == "hearts"
 ```
 
 To assign 1 to every card in deck4 that has a suit of hearts, first find the hearts:
 
 ```{r}
-
+deck4$value[deck4$suit == "hearts"]
 ```
 
 Check the subset is correct:
 
 ```{r}
-
+sum(deck4$value[deck4$suit == "hearts"])
 ```
 
 Assign the new value of 1:
 
 ```{r}
+deck4$value[deck4$suit == "hearts"] <- 1
 
 ```
 
 Finally, change the queen of spades to value of 13. Let's find the queen of spades:
 
 ```{r}
-
+deck4[deck4$face == "queen", ]
+deck4[deck4$suit == "spades", ]
 ```
 
 We can't do it with this code! The first line gives all queens and the second line gives all spades. 
@@ -1425,7 +1523,12 @@ There are six Boolean operators:
 Remember to include the complete test on both sides of the Boolean operator:
 
 ```{r}
+a <- c(1, 2, 3)
+b <- c(1, 2, 3)
+c <- c(1, 2, 4)
 
+a == b
+a == b & b == c
 ```
 
 If you remove the # sign, the last line gives an error when you try to run it because the test is incomplete on the right side.
@@ -1434,17 +1537,19 @@ If you remove the # sign, the last line gives an error when you try to run it be
 Boolean opeartors follow the same element-wise execution:
 
 ```{r}
-
+#a == 
+#Incomplete expression: a == 
 ```
 
 ```{r}
-
+#xor(b,)
+#Error in xor(b, ) : argument "y" is missing, with no default
 ```
 
 Use Boolean operator to locate the queen of spades:
 
 ```{r}
-
+deck4$face == "queen" & deck4$suit == "spades"
 ```
 
 Note that we join the two logical tests with a Boolean operator.
@@ -1452,49 +1557,54 @@ Note that we join the two logical tests with a Boolean operator.
 Save the results to its own object to make it easier to work with:
 
 ```{r}
-
+queenOfSpades <- deck4$face == "queen" & deck4$suit == "spades"
 ```
 
 Make sure it works:
 
 ```{r}
-
+deck4[queenOfSpades, ]
 ```
 
 Now assign the new value:
 
 ```{r}
-
+deck4$value[queenOfSpades] <- 13
+deck4[queenOfSpades, ]
 ```
 
 Set up some new objects to try out more logical tests:
 
 ```{r}
-
+w <- c(-1, 0, 1)
+x <- c(5, 15)
+y <- "February"
+z <- c("Monday", "Tuesday", "Friday")
 ```
 
 Is w positive?
 
 ```{r}
-
+w > 0
 ```
 
 Is x greater than 10 and less than 20?
 
 ```{r}
-
+x > 10 & x < 20
 ```
 
 Is object y the word February?
 
 ```{r}
-
+ y == "February"
 ```
 
 Is every value in z a day of the week?
 
 ```{r}
-
+all(z %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
+  "Saturday", "Sunday"))
 ```
 
 
@@ -1503,26 +1613,28 @@ Finally, let's create a card deck to play Blackjack, where all face cards have a
 Start by creating a new deck:
 
 ```{r}
-
+deck5 <- deck
+head(deck5, 13)
 ```
 
 Change the value of face cards in none fell swoop with `%in%`.
 
 First identify the indices:
 ```{r}
-
+facecard <- deck5$face %in% c("king", "queen", "jack")
+deck5[facecard, ]
 ```
 
 Then conver the values: 
 
 ```{r}
-
+deck5$value[facecard] <- 10
 ```
 
 Check:
 
 ```{r}
-
+head(deck5, 13)
 ```
 
 Right now, we don't have enough information to assign the ace a value (it depends on the player's other cards)!
@@ -1532,43 +1644,44 @@ Right now, we don't have enough information to assign the ace a value (it depend
 In R, `NA` stands for "Not Available" and is used as a placeholder for missing values. Because we do not know what `NA` is, it will propogate through any calculations:
 
 ```{r}
-
+20 + NA
 ```
 
 Missing values `NA` help you maintain complete data structure rather than having gaps. However they also propogate to other compuations:
 
 ```{r}
-
+NA == "Monday"
 ```
 
 Most R functions come with an optional argument, `na.rm`, which stands for `NA` remove. If `na.rm = TRUE`, it will ignore `NA`s:
 
 ```{r}
-
+c(NA, 1:50)
 ```
 
 Again, because we don't know what `NA` is, we also can't identify it using logical tests (remove # sign):
 
 ```{r}
-
+mean(c(NA, 1:50), na.rm = TRUE)
 ```
 
 But, R uses the function `is.na()` to identify if a value is an `NA`:
 
 ```{r}
-
+is.na(NA)
 ```
 
 Use `is.na()` to identify the index of `NA` in a data structure such as a vector:
 
 ```{r}
-
+is.na(c(NA, 1:50))
 ```
 
 So, finally, set all ace values to `NA`, because we don't know the real value until the end of a players turn:
 
 ```{r}
-
+deck5$value[deck5$face == "ace"] <- NA
+head(deck5, 13)
 ```
 
 You should now have a familiarity with:
